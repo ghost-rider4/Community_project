@@ -2,9 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Header } from './components/layout/Header';
 import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
+import { MentorDashboard } from './pages/MentorDashboard';
 import { Explore } from './pages/Explore';
 import { Upload } from './pages/Upload';
 import { Opportunities } from './pages/Opportunities';
@@ -54,7 +56,13 @@ const AppContent: React.FC = () => {
       return '/profile';
     }
     
-    return '/dashboard';
+    // Route to appropriate dashboard based on role
+    return user.role === 'mentor' ? '/mentor-dashboard' : '/dashboard';
+  };
+
+  const getDashboardRoute = () => {
+    if (!user) return '/signin';
+    return user.role === 'mentor' ? '/mentor-dashboard' : '/dashboard';
   };
   
   return (
@@ -64,21 +72,94 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/signin" element={!isAuthenticated ? <SignIn /> : <Navigate to={getOnboardingRoute()} replace />} />
           <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to={getOnboardingRoute()} replace />} />
-          <Route path="/onboarding" element={isAuthenticated && user?.role === 'student' ? <Onboarding /> : <Navigate to="/signin" replace />} />
-          <Route path="/mentor-onboarding" element={isAuthenticated && user?.role === 'mentor' ? <MentorOnboarding /> : <Navigate to="/signin" replace />} />
-          <Route path="/talent-selection" element={isAuthenticated ? <TalentSelection /> : <Navigate to="/signin" replace />} />
-          <Route path="/psychometric-assessment" element={isAuthenticated ? <PsychometricAssessment /> : <Navigate to="/signin" replace />} />
-          <Route path="/achievements" element={isAuthenticated ? <Achievements /> : <Navigate to="/signin" replace />} />
-          <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" replace />} />
-          <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signin" replace />} />
-          <Route path="/explore" element={isAuthenticated ? <Explore /> : <Navigate to="/signin" replace />} />
-          <Route path="/upload" element={isAuthenticated ? <Upload /> : <Navigate to="/signin" replace />} />
-          <Route path="/opportunities" element={isAuthenticated ? <Opportunities /> : <Navigate to="/signin" replace />} />
-          <Route path="/mentors" element={isAuthenticated ? <Mentors /> : <Navigate to="/signin" replace />} />
-          <Route path="/clubs" element={isAuthenticated ? <Clubs /> : <Navigate to="/signin" replace />} />
-          <Route path="/progress" element={isAuthenticated ? <Progress /> : <Navigate to="/signin" replace />} />
-          <Route path="/account" element={isAuthenticated ? <Account /> : <Navigate to="/signin" replace />} />
-          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/signin" replace />} />
+          
+          {/* Student Onboarding Routes */}
+          <Route path="/onboarding" element={
+            <ProtectedRoute requiredRole="student">
+              <Onboarding />
+            </ProtectedRoute>
+          } />
+          <Route path="/talent-selection" element={
+            <ProtectedRoute requiredRole="student">
+              <TalentSelection />
+            </ProtectedRoute>
+          } />
+          <Route path="/psychometric-assessment" element={
+            <ProtectedRoute requiredRole="student">
+              <PsychometricAssessment />
+            </ProtectedRoute>
+          } />
+          <Route path="/achievements" element={
+            <ProtectedRoute requiredRole="student">
+              <Achievements />
+            </ProtectedRoute>
+          } />
+
+          {/* Mentor Onboarding Routes */}
+          <Route path="/mentor-onboarding" element={
+            <ProtectedRoute requiredRole="mentor">
+              <MentorOnboarding />
+            </ProtectedRoute>
+          } />
+
+          {/* Protected Dashboard Routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute requiredRole="student">
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/mentor-dashboard" element={
+            <ProtectedRoute requiredRole="mentor">
+              <MentorDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Shared Protected Routes */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              {isAuthenticated ? <Navigate to={getDashboardRoute()} replace /> : <Navigate to="/signin" replace />}
+            </ProtectedRoute>
+          } />
+          <Route path="/explore" element={
+            <ProtectedRoute>
+              <Explore />
+            </ProtectedRoute>
+          } />
+          <Route path="/upload" element={
+            <ProtectedRoute requiredRole="student">
+              <Upload />
+            </ProtectedRoute>
+          } />
+          <Route path="/opportunities" element={
+            <ProtectedRoute>
+              <Opportunities />
+            </ProtectedRoute>
+          } />
+          <Route path="/mentors" element={
+            <ProtectedRoute requiredRole="student">
+              <Mentors />
+            </ProtectedRoute>
+          } />
+          <Route path="/clubs" element={
+            <ProtectedRoute>
+              <Clubs />
+            </ProtectedRoute>
+          } />
+          <Route path="/progress" element={
+            <ProtectedRoute requiredRole="student">
+              <Progress />
+            </ProtectedRoute>
+          } />
+          <Route path="/account" element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
         </Routes>
       </main>
     </div>

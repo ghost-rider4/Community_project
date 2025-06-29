@@ -1,25 +1,39 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload } from 'lucide-react';
+import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload, BookOpen, Calendar, MessageSquare } from 'lucide-react';
 import { ProfileDropdown } from './ProfileDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const Header: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navigationItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/explore', label: 'Explore', icon: Compass },
-    { path: '/upload', label: 'Upload', icon: Upload },
-    { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
-    { path: '/mentors', label: 'Mentors', icon: UserCheck },
-    { path: '/clubs', label: 'Clubs', icon: Users },
-    { path: '/progress', label: 'Progress', icon: Trophy }
-  ];
+  // Different navigation items based on user role
+  const getNavigationItems = () => {
+    if (user?.role === 'mentor') {
+      return [
+        { path: '/mentor-dashboard', label: 'Dashboard', icon: BookOpen },
+        { path: '/explore', label: 'Explore', icon: Compass },
+        { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
+        { path: '/clubs', label: 'Clubs', icon: Users }
+      ];
+    } else {
+      return [
+        { path: '/dashboard', label: 'Home', icon: Home },
+        { path: '/explore', label: 'Explore', icon: Compass },
+        { path: '/upload', label: 'Upload', icon: Upload },
+        { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
+        { path: '/mentors', label: 'Mentors', icon: UserCheck },
+        { path: '/clubs', label: 'Clubs', icon: Users },
+        { path: '/progress', label: 'Progress', icon: Trophy }
+      ];
+    }
+  };
+
+  const navigationItems = getNavigationItems();
 
   if (!isAuthenticated) {
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Settings, Moon, Sun, LogOut, Upload, Award } from 'lucide-react';
+import { User, Settings, Moon, Sun, LogOut, Upload, Award, BookOpen, Users } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,12 +23,25 @@ export const ProfileDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const menuItems = [
-    { icon: Upload, label: 'Upload Content', path: '/upload' },
-    { icon: User, label: 'Public Profile', path: '/profile' },
-    { icon: Settings, label: 'Account Settings', path: '/account' },
-    { icon: Award, label: 'My Progress', path: '/progress' }
-  ];
+  const getMenuItems = () => {
+    if (user?.role === 'mentor') {
+      return [
+        { icon: BookOpen, label: 'Mentor Dashboard', path: '/mentor-dashboard' },
+        { icon: Users, label: 'My Students', path: '/mentor-dashboard?tab=students' },
+        { icon: User, label: 'Public Profile', path: '/profile' },
+        { icon: Settings, label: 'Account Settings', path: '/account' }
+      ];
+    } else {
+      return [
+        { icon: Upload, label: 'Upload Content', path: '/upload' },
+        { icon: User, label: 'Public Profile', path: '/profile' },
+        { icon: Settings, label: 'Account Settings', path: '/account' },
+        { icon: Award, label: 'My Progress', path: '/progress' }
+      ];
+    }
+  };
+
+  const menuItems = getMenuItems();
 
   if (!user) return null;
 
@@ -43,9 +56,14 @@ export const ProfileDropdown: React.FC = () => {
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{user.name}</p>
           <div className="flex items-center gap-1">
             <Badge variant="silver" className="text-xs">
-              Student
+              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
             </Badge>
-            <span className="text-xs text-gray-500 dark:text-gray-400">Level 1</span>
+            {user.role === 'student' && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">Level {user.level || 1}</span>
+            )}
+            {user.role === 'mentor' && user.rating && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">★ {user.rating}</span>
+            )}
           </div>
         </div>
       </button>
@@ -63,9 +81,16 @@ export const ProfileDropdown: React.FC = () => {
                   <Badge variant="silver" className="text-xs">
                     {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    New Member
-                  </span>
+                  {user.role === 'student' && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Level {user.level || 1}
+                    </span>
+                  )}
+                  {user.role === 'mentor' && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {user.studentsCount || 0} students
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
