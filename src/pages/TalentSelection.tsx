@@ -18,7 +18,7 @@ export const TalentSelection: React.FC = () => {
       id: 'art-design',
       name: 'Art & Design',
       icon: '🎨',
-      description: 'Visual arts, graphic design, illustration'
+      description: 'Visual arts, graphic design, illustration, digital art'
     },
     {
       id: 'music',
@@ -30,13 +30,13 @@ export const TalentSelection: React.FC = () => {
       id: 'sports',
       name: 'Sports',
       icon: '⚽',
-      description: 'Athletics, team sports, individual sports'
+      description: 'Athletics, team sports, individual sports, fitness'
     },
     {
       id: 'writing',
       name: 'Writing',
       icon: '✍️',
-      description: 'Creative writing, journalism, poetry'
+      description: 'Creative writing, journalism, poetry, blogging'
     },
     {
       id: 'technology',
@@ -54,7 +54,7 @@ export const TalentSelection: React.FC = () => {
       id: 'public-speaking',
       name: 'Public Speaking',
       icon: '🎤',
-      description: 'Presentations, debate, communication'
+      description: 'Presentations, debate, communication, performance'
     },
     {
       id: 'languages',
@@ -66,7 +66,7 @@ export const TalentSelection: React.FC = () => {
       id: 'mathematics',
       name: 'Mathematics',
       icon: '🔢',
-      description: 'Pure math, applied math, statistics'
+      description: 'Pure math, applied math, statistics, calculus'
     },
     {
       id: 'sciences',
@@ -146,10 +146,10 @@ export const TalentSelection: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Select Your Talents
+              Choose Your Talents
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
-              Choose the areas where you excel or want to grow
+              Select the areas where you excel or want to grow
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               You can select multiple talents and add custom ones. This helps us personalize your experience.

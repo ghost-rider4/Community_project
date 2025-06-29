@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Search, Star, MapPin, Bot, Sparkles, MessageCircle } from 'lucide-react';
-import { MentorCard } from '../components/community/MentorCard';
 import { AIChatModal } from '../components/ai/AIChatModal';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { mockMentors } from '../utils/mockData';
 
 export const Mentors: React.FC = () => {
   const [selectedExpertise, setSelectedExpertise] = useState('all');
@@ -163,10 +161,17 @@ export const Mentors: React.FC = () => {
       {/* Human Mentors */}
       <div>
         <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">Human Mentors</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {mockMentors.map((mentor) => (
-            <MentorCard key={mentor.id} mentor={mentor} />
-          ))}
+        <div className="text-center py-16">
+          <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            No mentors available yet
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            We're working on connecting you with amazing mentors. In the meantime, try our AI mentor!
+          </p>
+          <Button onClick={() => setIsAIChatOpen(true)}>
+            Chat with Sophia AI
+          </Button>
         </div>
       </div>
 

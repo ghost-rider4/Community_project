@@ -1,9 +1,7 @@
 import React from 'react';
-import { Zap, Clock, Users } from 'lucide-react';
+import { Zap, Clock, Users, Target } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { mockChallenges } from '../../utils/mockData';
 
 export const DailyChallenges: React.FC = () => {
   return (
@@ -15,38 +13,17 @@ export const DailyChallenges: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="space-y-4">
-          {mockChallenges.map((challenge) => (
-            <div key={challenge.id} className="p-4 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-purple-200 dark:hover:border-purple-600 transition-colors">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-gray-900 dark:text-white">{challenge.title}</h4>
-                <Badge variant="default">{challenge.points} pts</Badge>
-              </div>
-              
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{challenge.description}</p>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>
-                      {challenge.deadline.toDateString() === new Date().toDateString() 
-                        ? 'Today' 
-                        : challenge.deadline.toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{challenge.participants} joined</span>
-                  </div>
-                </div>
-                
-                <Button size="sm">
-                  Start Challenge
-                </Button>
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-8">
+          <Target className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+            No challenges available
+          </h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Daily challenges are coming soon! Check back later for exciting tasks.
+          </p>
+          <Button size="sm" variant="outline">
+            Get Notified
+          </Button>
         </div>
       </CardContent>
     </Card>

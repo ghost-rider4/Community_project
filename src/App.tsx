@@ -17,6 +17,7 @@ import { Onboarding } from './pages/Onboarding';
 import { MentorOnboarding } from './pages/MentorOnboarding';
 import { TalentSelection } from './pages/TalentSelection';
 import { PsychometricAssessment } from './pages/PsychometricAssessment';
+import { Achievements } from './pages/Achievements';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 
@@ -67,6 +68,7 @@ const AppContent: React.FC = () => {
           <Route path="/mentor-onboarding" element={isAuthenticated && user?.role === 'mentor' ? <MentorOnboarding /> : <Navigate to="/signin" replace />} />
           <Route path="/talent-selection" element={isAuthenticated ? <TalentSelection /> : <Navigate to="/signin" replace />} />
           <Route path="/psychometric-assessment" element={isAuthenticated ? <PsychometricAssessment /> : <Navigate to="/signin" replace />} />
+          <Route path="/achievements" element={isAuthenticated ? <Achievements /> : <Navigate to="/signin" replace />} />
           <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" replace />} />
           <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signin" replace />} />
           <Route path="/explore" element={isAuthenticated ? <Explore /> : <Navigate to="/signin" replace />} />

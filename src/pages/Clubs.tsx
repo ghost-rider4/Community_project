@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Users, Plus, TrendingUp } from 'lucide-react';
-import { ClubCard } from '../components/community/ClubCard';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { mockClubs } from '../utils/mockData';
 
 export const Clubs: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -15,25 +13,6 @@ export const Clubs: React.FC = () => {
     { id: 'art', label: 'Art' },
     { id: 'technology', label: 'Technology' },
     { id: 'literature', label: 'Literature' }
-  ];
-
-  const featuredClubs = [
-    {
-      id: 'featured-1',
-      name: 'Young Innovators',
-      talent: 'Technology',
-      memberCount: 1247,
-      description: 'Building the future through code, AI, and innovation',
-      recentActivity: 'Sarah just shared her AI chatbot project'
-    },
-    {
-      id: 'featured-2',
-      name: 'Creative Writers Circle',
-      talent: 'Literature',
-      memberCount: 892,
-      description: 'Where words come alive and stories find their voice',
-      recentActivity: 'New poetry challenge: "Emotions in Color"'
-    }
   ];
   
   return (
@@ -97,29 +76,25 @@ export const Clubs: React.FC = () => {
         </div>
       </div>
 
-      {/* Featured Clubs */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-6">
-          <TrendingUp className="w-5 h-5 text-orange-500" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Featured Clubs</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {featuredClubs.map((club) => (
-            <ClubCard key={club.id} club={club} />
-          ))}
-        </div>
-      </div>
-
-      {/* All Clubs */}
+      {/* Clubs Grid */}
       <div>
         <div className="flex items-center gap-2 mb-6">
           <Users className="w-5 h-5 text-purple-500" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">All Clubs</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockClubs.map((club) => (
-            <ClubCard key={club.id} club={club} />
-          ))}
+        
+        <div className="text-center py-16">
+          <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            No clubs available yet
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Be the first to create a club and start building your community!
+          </p>
+          <Button>
+            <Plus className="w-4 h-4" />
+            Create First Club
+          </Button>
         </div>
       </div>
     </div>

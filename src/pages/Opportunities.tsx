@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Filter, MapPin, Calendar } from 'lucide-react';
-import { OpportunityCard } from '../components/opportunities/OpportunityCard';
+import { Filter, MapPin, Calendar, Briefcase } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { mockOpportunities } from '../utils/mockData';
 
 export const Opportunities: React.FC = () => {
   const [selectedType, setSelectedType] = useState('all');
@@ -59,10 +57,15 @@ export const Opportunities: React.FC = () => {
       </div>
       
       {/* Opportunities Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {mockOpportunities.map((opportunity) => (
-          <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-        ))}
+      <div className="text-center py-16">
+        <Briefcase className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          No opportunities available yet
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          We're working on bringing you amazing opportunities. Check back soon!
+        </p>
+        <Button>Get Notified</Button>
       </div>
     </div>
   );
