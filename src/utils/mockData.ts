@@ -1,4 +1,4 @@
-import { Student, Mentor, Project, Opportunity, Club, Challenge } from '../types';
+import { Student, Mentor, Project, Opportunity, Club, Challenge, Achievement, Streak, LeaderboardEntry, TierBenefit, LevelReward } from '../types';
 
 export const mockStudent: Student = {
   id: '1',
@@ -17,8 +17,448 @@ export const mockStudent: Student = {
   clubs: ['piano-masters', 'physics-explorers'],
   psychometricCompleted: true,
   verificationStatus: 'verified',
-  joinedAt: new Date('2024-01-15')
+  joinedAt: new Date('2024-01-15'),
+  level: 8,
+  experience: 1250,
+  nextLevelExp: 1500,
+  achievements: [
+    {
+      id: 'ach1',
+      title: 'First Steps',
+      description: 'Complete your first project upload',
+      icon: '🎯',
+      category: 'milestone',
+      rarity: 'common',
+      points: 50,
+      unlockedAt: new Date('2024-01-16')
+    },
+    {
+      id: 'ach2',
+      title: 'Social Butterfly',
+      description: 'Join 3 different clubs',
+      icon: '🦋',
+      category: 'social',
+      rarity: 'rare',
+      points: 100,
+      unlockedAt: new Date('2024-01-20')
+    },
+    {
+      id: 'ach3',
+      title: 'Master Musician',
+      description: 'Reach advanced level in any musical talent',
+      icon: '🎼',
+      category: 'learning',
+      rarity: 'epic',
+      points: 250,
+      progress: 75,
+      maxProgress: 100
+    },
+    {
+      id: 'ach4',
+      title: 'Legendary Creator',
+      description: 'Have a project featured on the homepage',
+      icon: '👑',
+      category: 'creative',
+      rarity: 'legendary',
+      points: 500
+    },
+    {
+      id: 'ach5',
+      title: 'Mentor\'s Pride',
+      description: 'Receive 5-star rating from a mentor',
+      icon: '⭐',
+      category: 'learning',
+      rarity: 'rare',
+      points: 150,
+      unlockedAt: new Date('2024-02-01')
+    },
+    {
+      id: 'ach6',
+      title: 'Streak Master',
+      description: 'Maintain a 30-day login streak',
+      icon: '🔥',
+      category: 'milestone',
+      rarity: 'epic',
+      points: 200,
+      progress: 23,
+      maxProgress: 30
+    }
+  ],
+  streaks: [
+    {
+      id: 'streak1',
+      type: 'daily_login',
+      count: 23,
+      lastUpdated: new Date(),
+      maxStreak: 45
+    },
+    {
+      id: 'streak2',
+      type: 'project_upload',
+      count: 5,
+      lastUpdated: new Date(),
+      maxStreak: 8
+    },
+    {
+      id: 'streak3',
+      type: 'challenge_complete',
+      count: 12,
+      lastUpdated: new Date(),
+      maxStreak: 15
+    },
+    {
+      id: 'streak4',
+      type: 'mentor_session',
+      count: 3,
+      lastUpdated: new Date(),
+      maxStreak: 7
+    }
+  ]
 };
+
+export const mockLeaderboard: LeaderboardEntry[] = [
+  {
+    id: '1',
+    name: 'Emma Rodriguez',
+    points: 4850,
+    tier: 'diamond',
+    level: 15,
+    rank: 1,
+    talents: ['AI/ML', 'Mathematics'],
+    weeklyGain: 320
+  },
+  {
+    id: '2',
+    name: 'Kai Nakamura',
+    points: 4200,
+    tier: 'gold',
+    level: 13,
+    rank: 2,
+    talents: ['Music', 'Composition'],
+    weeklyGain: 280
+  },
+  {
+    id: '3',
+    name: 'Zara Ahmed',
+    points: 3950,
+    tier: 'gold',
+    level: 12,
+    rank: 3,
+    talents: ['Digital Art', 'Animation'],
+    weeklyGain: 245
+  },
+  {
+    id: '4',
+    name: 'Lucas Silva',
+    points: 3720,
+    tier: 'gold',
+    level: 11,
+    rank: 4,
+    talents: ['Physics', 'Engineering'],
+    weeklyGain: 190
+  },
+  {
+    id: '5',
+    name: 'Aria Johnson',
+    points: 3500,
+    tier: 'silver',
+    level: 10,
+    rank: 5,
+    talents: ['Literature', 'Creative Writing'],
+    weeklyGain: 165
+  },
+  {
+    id: '6',
+    name: 'Dev Patel',
+    points: 3280,
+    tier: 'silver',
+    level: 10,
+    rank: 6,
+    talents: ['Programming', 'Robotics'],
+    weeklyGain: 155
+  },
+  {
+    id: '7',
+    name: 'Sophie Chen',
+    points: 3100,
+    tier: 'silver',
+    level: 9,
+    rank: 7,
+    talents: ['Chemistry', 'Research'],
+    weeklyGain: 140
+  },
+  {
+    id: '8',
+    name: 'Marcus Thompson',
+    points: 2950,
+    tier: 'silver',
+    level: 9,
+    rank: 8,
+    talents: ['Photography', 'Visual Arts'],
+    weeklyGain: 135
+  },
+  {
+    id: '9',
+    name: 'Ava Williams',
+    points: 2800,
+    tier: 'silver',
+    level: 8,
+    rank: 9,
+    talents: ['Dance', 'Choreography'],
+    weeklyGain: 120
+  },
+  {
+    id: '10',
+    name: 'Ryan O\'Connor',
+    points: 2650,
+    tier: 'silver',
+    level: 8,
+    rank: 10,
+    talents: ['Biology', 'Environmental Science'],
+    weeklyGain: 110
+  }
+];
+
+export const mockAchievements: Achievement[] = [
+  {
+    id: 'ach1',
+    title: 'First Steps',
+    description: 'Complete your first project upload',
+    icon: '🎯',
+    category: 'milestone',
+    rarity: 'common',
+    points: 50,
+    unlockedAt: new Date('2024-01-16')
+  },
+  {
+    id: 'ach2',
+    title: 'Social Butterfly',
+    description: 'Join 3 different clubs',
+    icon: '🦋',
+    category: 'social',
+    rarity: 'rare',
+    points: 100,
+    unlockedAt: new Date('2024-01-20')
+  },
+  {
+    id: 'ach3',
+    title: 'Master Musician',
+    description: 'Reach advanced level in any musical talent',
+    icon: '🎼',
+    category: 'learning',
+    rarity: 'epic',
+    points: 250,
+    progress: 75,
+    maxProgress: 100
+  },
+  {
+    id: 'ach4',
+    title: 'Legendary Creator',
+    description: 'Have a project featured on the homepage',
+    icon: '👑',
+    category: 'creative',
+    rarity: 'legendary',
+    points: 500
+  },
+  {
+    id: 'ach5',
+    title: 'Mentor\'s Pride',
+    description: 'Receive 5-star rating from a mentor',
+    icon: '⭐',
+    category: 'learning',
+    rarity: 'rare',
+    points: 150,
+    unlockedAt: new Date('2024-02-01')
+  },
+  {
+    id: 'ach6',
+    title: 'Streak Master',
+    description: 'Maintain a 30-day login streak',
+    icon: '🔥',
+    category: 'milestone',
+    rarity: 'epic',
+    points: 200,
+    progress: 23,
+    maxProgress: 30
+  },
+  {
+    id: 'ach7',
+    title: 'Community Leader',
+    description: 'Help 10 other students with their projects',
+    icon: '🤝',
+    category: 'leadership',
+    rarity: 'epic',
+    points: 300,
+    progress: 7,
+    maxProgress: 10
+  },
+  {
+    id: 'ach8',
+    title: 'Innovation Pioneer',
+    description: 'Create a project using cutting-edge technology',
+    icon: '🚀',
+    category: 'creative',
+    rarity: 'legendary',
+    points: 750
+  },
+  {
+    id: 'ach9',
+    title: 'Perfect Score',
+    description: 'Score 100% on 5 different challenges',
+    icon: '💯',
+    category: 'learning',
+    rarity: 'rare',
+    points: 200,
+    progress: 3,
+    maxProgress: 5
+  }
+];
+
+export const mockTierBenefits: TierBenefit[] = [
+  // Bronze Benefits
+  {
+    id: 'bronze1',
+    title: 'Basic Project Uploads',
+    description: 'Upload up to 5 projects per month',
+    tier: 'bronze',
+    icon: '📁'
+  },
+  {
+    id: 'bronze2',
+    title: 'Community Access',
+    description: 'Join up to 3 clubs and participate in discussions',
+    tier: 'bronze',
+    icon: '👥'
+  },
+  
+  // Silver Benefits
+  {
+    id: 'silver1',
+    title: 'Enhanced Uploads',
+    description: 'Upload up to 15 projects per month with priority processing',
+    tier: 'silver',
+    icon: '📤'
+  },
+  {
+    id: 'silver2',
+    title: 'Mentor Matching',
+    description: 'Get matched with verified mentors in your field',
+    tier: 'silver',
+    icon: '🎯'
+  },
+  {
+    id: 'silver3',
+    title: 'Advanced Analytics',
+    description: 'Detailed insights into your learning progress',
+    tier: 'silver',
+    icon: '📊'
+  },
+  {
+    id: 'silver4',
+    title: 'Priority Support',
+    description: 'Faster response times for help requests',
+    tier: 'silver',
+    icon: '⚡'
+  },
+  
+  // Gold Benefits
+  {
+    id: 'gold1',
+    title: 'Unlimited Projects',
+    description: 'Upload unlimited projects with premium features',
+    tier: 'gold',
+    icon: '∞'
+  },
+  {
+    id: 'gold2',
+    title: 'Expert Mentorship',
+    description: 'Access to industry experts and thought leaders',
+    tier: 'gold',
+    icon: '🌟'
+  },
+  {
+    id: 'gold3',
+    title: 'Scholarship Opportunities',
+    description: 'Exclusive access to scholarships and grants',
+    tier: 'gold',
+    icon: '🎓'
+  },
+  {
+    id: 'gold4',
+    title: 'Portfolio Showcase',
+    description: 'Featured placement in our talent showcase',
+    tier: 'gold',
+    icon: '🏆'
+  },
+  
+  // Diamond Benefits
+  {
+    id: 'diamond1',
+    title: 'VIP Experience',
+    description: 'White-glove service and personalized attention',
+    tier: 'diamond',
+    icon: '💎'
+  },
+  {
+    id: 'diamond2',
+    title: 'Industry Connections',
+    description: 'Direct introductions to industry leaders',
+    tier: 'diamond',
+    icon: '🤝'
+  },
+  {
+    id: 'diamond3',
+    title: 'Exclusive Events',
+    description: 'Invitation-only masterclasses and workshops',
+    tier: 'diamond',
+    icon: '🎪'
+  },
+  {
+    id: 'diamond4',
+    title: 'Custom Opportunities',
+    description: 'Personalized internships and project opportunities',
+    tier: 'diamond',
+    icon: '🎯'
+  }
+];
+
+export const mockLevelRewards: LevelReward[] = [
+  {
+    level: 5,
+    points: 500,
+    title: 'Rising Star',
+    description: 'You\'re making great progress!',
+    rewards: ['Custom profile badge', 'Priority in clubs', '50 bonus points']
+  },
+  {
+    level: 9,
+    points: 1500,
+    title: 'Dedicated Learner',
+    description: 'Your commitment is showing!',
+    rewards: ['Advanced analytics access', 'Mentor recommendation priority', 'Exclusive challenge access', '100 bonus points']
+  },
+  {
+    level: 10,
+    points: 2000,
+    title: 'Expert in Training',
+    description: 'You\'re becoming a true expert!',
+    rewards: ['Silver tier upgrade', 'Portfolio review session', 'Featured project opportunity', '200 bonus points']
+  },
+  {
+    level: 15,
+    points: 4000,
+    title: 'Master Achiever',
+    description: 'Your skills are truly impressive!',
+    rewards: ['Gold tier upgrade', 'Industry mentor access', 'Scholarship eligibility', 'Custom achievement badge', '500 bonus points']
+  },
+  {
+    level: 20,
+    points: 8000,
+    title: 'Legendary Talent',
+    description: 'You\'ve reached legendary status!',
+    rewards: ['Diamond tier upgrade', 'VIP support access', 'Industry showcase feature', 'Personal brand consultation', '1000 bonus points']
+  }
+];
 
 export const mockMentors: Mentor[] = [
   {

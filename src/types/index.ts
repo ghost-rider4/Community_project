@@ -19,6 +19,11 @@ export interface Student extends User {
   mentorId?: string;
   psychometricCompleted: boolean;
   verificationStatus: 'pending' | 'verified' | 'rejected';
+  achievements: Achievement[];
+  streaks: Streak[];
+  level: number;
+  experience: number;
+  nextLevelExp: number;
 }
 
 export interface Mentor extends User {
@@ -97,4 +102,53 @@ export interface Challenge {
   points: number;
   deadline: Date;
   participants: number;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'learning' | 'social' | 'creative' | 'leadership' | 'milestone';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  points: number;
+  unlockedAt?: Date;
+  progress?: number;
+  maxProgress?: number;
+}
+
+export interface Streak {
+  id: string;
+  type: 'daily_login' | 'project_upload' | 'challenge_complete' | 'mentor_session';
+  count: number;
+  lastUpdated: Date;
+  maxStreak: number;
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  avatar?: string;
+  points: number;
+  tier: Tier;
+  level: number;
+  rank: number;
+  talents: string[];
+  weeklyGain: number;
+}
+
+export interface TierBenefit {
+  id: string;
+  title: string;
+  description: string;
+  tier: Tier;
+  icon: string;
+}
+
+export interface LevelReward {
+  level: number;
+  points: number;
+  title: string;
+  description: string;
+  rewards: string[];
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Brain, Bell, Search, LogOut, Home, Compass, Briefcase, Users, UserCheck, Menu, X } from 'lucide-react';
+import { Brain, Bell, Search, LogOut, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Button } from '../ui/Button';
@@ -19,7 +19,8 @@ export const Header: React.FC = () => {
     { path: '/explore', label: 'Explore', icon: Compass },
     { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
     { path: '/mentors', label: 'Mentors', icon: UserCheck },
-    { path: '/clubs', label: 'Clubs', icon: Users }
+    { path: '/clubs', label: 'Clubs', icon: Users },
+    { path: '/progress', label: 'Progress', icon: Trophy }
   ];
 
   if (!isAuthenticated) {
