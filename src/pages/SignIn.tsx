@@ -10,7 +10,8 @@ export const SignIn: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const { login, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,8 +21,23 @@ export const SignIn: React.FC = () => {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+
+    try {
+      await resetPassword(email);
+      setResetEmailSent(true);
+      setError('');
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -61,6 +77,14 @@ export const SignIn: React.FC = () => {
                 </div>
               )}
 
+              {resetEmailSent && (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg animate-slide-up">
+                  <p className="text-green-600 dark:text-green-400 text-sm">
+                    Password reset email sent! Check your inbox.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email address
@@ -75,6 +99,7 @@ export const SignIn: React.FC = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Enter your email"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -93,11 +118,13 @@ export const SignIn: React.FC = () => {
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Enter your password"
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -109,15 +136,18 @@ export const SignIn: React.FC = () => {
                   <input
                     type="checkbox"
                     className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
+                    disabled={isLoading}
                   />
                   <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
                 </label>
-                <Link
-                  to="/forgot-password"
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
                   className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                  disabled={isLoading}
                 >
                   Forgot password?
-                </Link>
+                </button>
               </div>
 
               <Button
@@ -126,8 +156,17 @@ export const SignIn: React.FC = () => {
                 size="lg"
                 disabled={isLoading}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
-                {!isLoading && <ArrowRight className="w-5 h-5" />}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  <>
+                    Sign in
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </Button>
             </form>
 
@@ -142,15 +181,6 @@ export const SignIn: React.FC = () => {
                 </Link>
               </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Demo Credentials */}
-        <Card className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-          <CardContent className="p-4">
-            <p className="text-sm text-blue-800 dark:text-blue-300 text-center">
-              <strong>Demo:</strong> Use any email and password to sign in
-            </p>
           </CardContent>
         </Card>
       </div>

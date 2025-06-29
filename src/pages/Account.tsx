@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { User, Mail, Lock, Camera, Save, Eye, EyeOff } from 'lucide-react';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
-import { mockStudent } from '../utils/mockData';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Account: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile');
+  const { user, firebaseUser, updateUserProfile } = useAuth();
   const [formData, setFormData] = useState({
-    name: mockStudent.name,
-    email: mockStudent.email,
+    name: user?.name || '',
+    email: user?.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -25,6 +27,8 @@ export const Account: React.FC = () => {
     new: false,
     confirm: false
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -43,9 +47,70 @@ export const Account: React.FC = () => {
     }));
   };
 
-  const handleSave = (section: string) => {
-    // Handle save logic here
-    console.log(`Saving ${section}:`, formData);
+  const handleProfileSave = async () => {
+    setIsLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      await updateUserProfile({
+        name: formData.name
+      });
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setIsLoading(true);
+    setMessage({ type: '', text: '' });
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setMessage({ type: 'error', text: 'New passwords do not match' });
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password should be at least 6 characters' });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      if (!firebaseUser || !user?.email) {
+        throw new Error('No user logged in');
+      }
+
+      // Re-authenticate user before changing password
+      const credential = EmailAuthProvider.credential(user.email, formData.currentPassword);
+      await reauthenticateWithCredential(firebaseUser, credential);
+
+      // Update password
+      await updatePassword(firebaseUser, formData.newPassword);
+
+      setMessage({ type: 'success', text: 'Password updated successfully!' });
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+    } catch (error: any) {
+      if (error.code === 'auth/wrong-password') {
+        setMessage({ type: 'error', text: 'Current password is incorrect' });
+      } else {
+        setMessage({ type: 'error', text: error.message });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePreferencesSave = () => {
+    setMessage({ type: 'success', text: 'Preferences saved successfully!' });
   };
 
   const tabs = [
@@ -62,6 +127,17 @@ export const Account: React.FC = () => {
           Manage your account information and preferences
         </p>
       </div>
+
+      {/* Message Display */}
+      {message.text && (
+        <div className={`mb-6 p-4 rounded-lg ${
+          message.type === 'success' 
+            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400'
+            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200 dark:border-gray-700">
@@ -121,6 +197,7 @@ export const Account: React.FC = () => {
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -132,14 +209,21 @@ export const Account: React.FC = () => {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                  disabled
                 />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Email cannot be changed. Contact support if you need to update your email.
+                </p>
               </div>
 
-              <Button onClick={() => handleSave('profile')} className="w-full sm:w-auto">
+              <Button 
+                onClick={handleProfileSave} 
+                className="w-full sm:w-auto"
+                disabled={isLoading}
+              >
                 <Save className="w-4 h-4" />
-                Save Changes
+                {isLoading ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardContent>
           </Card>
@@ -166,11 +250,13 @@ export const Account: React.FC = () => {
                     onChange={(e) => handleInputChange('currentPassword', e.target.value)}
                     className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Enter current password"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    disabled={isLoading}
                   >
                     {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -189,11 +275,13 @@ export const Account: React.FC = () => {
                     onChange={(e) => handleInputChange('newPassword', e.target.value)}
                     className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Enter new password"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    disabled={isLoading}
                   >
                     {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -212,40 +300,27 @@ export const Account: React.FC = () => {
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Confirm new password"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    disabled={isLoading}
                   >
                     {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
-              <Button onClick={() => handleSave('security')} className="w-full sm:w-auto">
+              <Button 
+                onClick={handlePasswordChange} 
+                className="w-full sm:w-auto"
+                disabled={isLoading}
+              >
                 <Save className="w-4 h-4" />
-                Update Password
+                {isLoading ? 'Updating...' : 'Update Password'}
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Two-Factor Authentication</h3>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Enable 2FA</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Add an extra layer of security to your account
-                  </p>
-                </div>
-                <Button variant="outline">
-                  Enable
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -282,7 +357,7 @@ export const Account: React.FC = () => {
                 </div>
               ))}
 
-              <Button onClick={() => handleSave('preferences')} className="w-full sm:w-auto">
+              <Button onClick={handlePreferencesSave} className="w-full sm:w-auto">
                 <Save className="w-4 h-4" />
                 Save Preferences
               </Button>

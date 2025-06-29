@@ -5,12 +5,11 @@ import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { mockStudent } from '../../utils/mockData';
 
 export const ProfileDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -31,20 +30,22 @@ export const ProfileDropdown: React.FC = () => {
     { icon: Award, label: 'My Progress', path: '/progress' }
   ];
 
+  if (!user) return null;
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       >
-        <Avatar name={mockStudent.name} size="sm" />
+        <Avatar name={user.name} size="sm" />
         <div className="hidden md:block text-left">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{mockStudent.name}</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{user.name}</p>
           <div className="flex items-center gap-1">
-            <Badge variant={mockStudent.tier} className="text-xs">
-              {mockStudent.tier.charAt(0).toUpperCase() + mockStudent.tier.slice(1)}
+            <Badge variant="silver" className="text-xs">
+              Student
             </Badge>
-            <span className="text-xs text-gray-500 dark:text-gray-400">Level {mockStudent.level}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Level 1</span>
           </div>
         </div>
       </button>
@@ -54,16 +55,16 @@ export const ProfileDropdown: React.FC = () => {
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <Avatar name={mockStudent.name} size="md" />
+              <Avatar name={user.name} size="md" />
               <div className="flex-1">
-                <p className="font-medium text-gray-900 dark:text-white">{mockStudent.name}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{mockStudent.email}</p>
+                <p className="font-medium text-gray-900 dark:text-white">{user.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant={mockStudent.tier} className="text-xs">
-                    {mockStudent.tier.charAt(0).toUpperCase() + mockStudent.tier.slice(1)}
+                  <Badge variant="silver" className="text-xs">
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </Badge>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {mockStudent.points.toLocaleString()} points
+                    New Member
                   </span>
                 </div>
               </div>

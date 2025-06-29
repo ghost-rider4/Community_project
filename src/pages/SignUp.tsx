@@ -24,8 +24,14 @@ export const SignUp: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password should be at least 6 characters');
       return;
     }
 
@@ -34,15 +40,20 @@ export const SignUp: React.FC = () => {
       return;
     }
 
+    if (!formData.name.trim()) {
+      setError('Please enter your full name');
+      return;
+    }
+
     try {
-      await signup(formData.name, formData.email, formData.password, formData.role);
+      await signup(formData.name.trim(), formData.email, formData.password, formData.role);
       if (formData.role === 'student') {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
       }
-    } catch (err) {
-      setError('Failed to create account. Please try again.');
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -103,6 +114,7 @@ export const SignUp: React.FC = () => {
                         ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-md'
                         : 'border-gray-300 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-600 text-gray-700 dark:text-gray-300 hover:shadow-md'
                     }`}
+                    disabled={isLoading}
                   >
                     <GraduationCap className="w-6 h-6 mx-auto mb-2" />
                     <span className="text-sm font-medium">Student</span>
@@ -115,6 +127,7 @@ export const SignUp: React.FC = () => {
                         ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-md'
                         : 'border-gray-300 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-600 text-gray-700 dark:text-gray-300 hover:shadow-md'
                     }`}
+                    disabled={isLoading}
                   >
                     <Users className="w-6 h-6 mx-auto mb-2" />
                     <span className="text-sm font-medium">Mentor</span>
@@ -137,6 +150,7 @@ export const SignUp: React.FC = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Enter your full name"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -156,6 +170,7 @@ export const SignUp: React.FC = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Enter your email"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -175,11 +190,13 @@ export const SignUp: React.FC = () => {
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Create a password"
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -201,11 +218,13 @@ export const SignUp: React.FC = () => {
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Confirm your password"
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    disabled={isLoading}
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -219,6 +238,7 @@ export const SignUp: React.FC = () => {
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
                   className="mt-1 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
+                  disabled={isLoading}
                 />
                 <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   I agree to the{' '}
@@ -238,8 +258,17 @@ export const SignUp: React.FC = () => {
                 size="lg"
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Create account'}
-                {!isLoading && <ArrowRight className="w-5 h-5" />}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Creating account...
+                  </div>
+                ) : (
+                  <>
+                    Create account
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </Button>
             </form>
 
