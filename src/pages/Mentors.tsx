@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Star, MapPin, Bot, Sparkles, MessageCircle } from 'lucide-react';
+import { Search, Star, MapPin, Bot, Sparkles, MessageCircle, Users } from 'lucide-react';
 import { AIChatModal } from '../components/ai/AIChatModal';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
