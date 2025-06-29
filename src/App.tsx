@@ -1,0 +1,51 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Header } from './components/layout/Header';
+import { Home } from './pages/Home';
+import { Dashboard } from './pages/Dashboard';
+import { Explore } from './pages/Explore';
+import { Opportunities } from './pages/Opportunities';
+import { Mentors } from './pages/Mentors';
+import { Clubs } from './pages/Clubs';
+import { Onboarding } from './pages/Onboarding';
+import { SignIn } from './pages/SignIn';
+import { SignUp } from './pages/SignUp';
+
+const AppContent: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <Header />
+      <main>
+        <Routes>
+          <Route path="/signin" element={!isAuthenticated ? <SignIn /> : <Navigate to="/" replace />} />
+          <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to="/" replace />} />
+          <Route path="/onboarding" element={isAuthenticated ? <Onboarding /> : <Navigate to="/signin" replace />} />
+          <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" replace />} />
+          <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signin" replace />} />
+          <Route path="/explore" element={isAuthenticated ? <Explore /> : <Navigate to="/signin" replace />} />
+          <Route path="/opportunities" element={isAuthenticated ? <Opportunities /> : <Navigate to="/signin" replace />} />
+          <Route path="/mentors" element={isAuthenticated ? <Mentors /> : <Navigate to="/signin" replace />} />
+          <Route path="/clubs" element={isAuthenticated ? <Clubs /> : <Navigate to="/signin" replace />} />
+        </Routes>
+      </main>
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
