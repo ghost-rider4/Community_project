@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Brain, Eye, EyeOff, Mail, Lock, User, ArrowRight, GraduationCap, Users } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, GraduationCap, Users } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { useAuth } from '../contexts/AuthContext';
@@ -59,12 +59,19 @@ export const SignUp: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 mb-4">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-xl shadow-lg">
-              <Brain className="w-8 h-8 text-white" />
+            <img 
+              src="/image.png" 
+              alt="ElevatED" 
+              className="w-12 h-12 object-contain"
+            />
+            <div>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                ElevatED
+              </span>
+              <p className="text-sm text-gray-600 dark:text-gray-400 -mt-1">
+                Where gifted minds meet
+              </p>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              GiftedHub
-            </span>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Join our community</h1>
           <p className="text-gray-600 dark:text-gray-400">

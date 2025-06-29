@@ -6,10 +6,13 @@ import { Header } from './components/layout/Header';
 import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
 import { Explore } from './pages/Explore';
+import { Upload } from './pages/Upload';
 import { Opportunities } from './pages/Opportunities';
 import { Mentors } from './pages/Mentors';
 import { Clubs } from './pages/Clubs';
 import { Progress } from './pages/Progress';
+import { Account } from './pages/Account';
+import { Profile } from './pages/Profile';
 import { Onboarding } from './pages/Onboarding';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
@@ -28,10 +31,13 @@ const AppContent: React.FC = () => {
           <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" replace />} />
           <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signin" replace />} />
           <Route path="/explore" element={isAuthenticated ? <Explore /> : <Navigate to="/signin" replace />} />
+          <Route path="/upload" element={isAuthenticated ? <Upload /> : <Navigate to="/signin" replace />} />
           <Route path="/opportunities" element={isAuthenticated ? <Opportunities /> : <Navigate to="/signin" replace />} />
           <Route path="/mentors" element={isAuthenticated ? <Mentors /> : <Navigate to="/signin" replace />} />
           <Route path="/clubs" element={isAuthenticated ? <Clubs /> : <Navigate to="/signin" replace />} />
           <Route path="/progress" element={isAuthenticated ? <Progress /> : <Navigate to="/signin" replace />} />
+          <Route path="/account" element={isAuthenticated ? <Account /> : <Navigate to="/signin" replace />} />
+          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/signin" replace />} />
         </Routes>
       </main>
     </div>

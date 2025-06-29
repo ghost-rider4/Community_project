@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Brain, Bell, Search, LogOut, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy } from 'lucide-react';
-import { Avatar } from '../ui/Avatar';
-import { ThemeToggle } from '../ui/ThemeToggle';
-import { Button } from '../ui/Button';
+import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload } from 'lucide-react';
+import { ProfileDropdown } from './ProfileDropdown';
 import { useAuth } from '../../contexts/AuthContext';
-import { mockStudent } from '../../utils/mockData';
 
 export const Header: React.FC = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -17,6 +14,7 @@ export const Header: React.FC = () => {
   const navigationItems = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/explore', label: 'Explore', icon: Compass },
+    { path: '/upload', label: 'Upload', icon: Upload },
     { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
     { path: '/mentors', label: 'Mentors', icon: UserCheck },
     { path: '/clubs', label: 'Clubs', icon: Users },
@@ -30,22 +28,28 @@ export const Header: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-2 rounded-lg">
-                <Brain className="w-6 h-6 text-white" />
+              <img 
+                src="/image.png" 
+                alt="ElevatED" 
+                className="w-10 h-10 object-contain"
+              />
+              <div>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  ElevatED
+                </span>
+                <p className="text-xs text-gray-600 dark:text-gray-400 -mt-1">
+                  Where gifted minds meet
+                </p>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                GiftedHub
-              </span>
             </Link>
             
             {/* Auth Actions */}
             <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <Link to="/signin">
-                <Button variant="ghost" size="sm">Sign In</Button>
+              <Link to="/signin" className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium">
+                Sign In
               </Link>
-              <Link to="/signup">
-                <Button size="sm">Sign Up</Button>
+              <Link to="/signup" className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 font-medium">
+                Sign Up
               </Link>
             </div>
           </div>
@@ -60,12 +64,19 @@ export const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 flex-shrink-0">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-2 rounded-lg">
-              <Brain className="w-6 h-6 text-white" />
+            <img 
+              src="/image.png" 
+              alt="ElevatED" 
+              className="w-10 h-10 object-contain"
+            />
+            <div className="hidden sm:block">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">
+                ElevatED
+              </span>
+              <p className="text-xs text-gray-600 dark:text-gray-400 -mt-1">
+                Where gifted minds meet
+              </p>
             </div>
-            <span className="hidden sm:block text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              GiftedHub
-            </span>
           </Link>
           
           {/* Search - Hidden on mobile */}
@@ -103,8 +114,6 @@ export const Header: React.FC = () => {
           
           {/* User Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <ThemeToggle />
-            
             {/* Mobile Search Button */}
             <button className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
               <Search className="w-5 h-5" />
@@ -115,11 +124,8 @@ export const Header: React.FC = () => {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
             </button>
             
-            {/* Desktop User Info */}
-            <div className="hidden sm:flex items-center gap-2">
-              <Avatar name={mockStudent.name} size="sm" />
-              <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">{mockStudent.name}</span>
-            </div>
+            {/* Profile Dropdown */}
+            <ProfileDropdown />
             
             {/* Mobile Menu Button */}
             <button
@@ -127,15 +133,6 @@ export const Header: React.FC = () => {
               className="lg:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            
-            {/* Desktop Logout */}
-            <button
-              onClick={logout}
-              className="hidden sm:block p-2 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-              title="Sign out"
-            >
-              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -162,24 +159,6 @@ export const Header: React.FC = () => {
                   </Link>
                 );
               })}
-              
-              {/* Mobile User Info */}
-              <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-800 mt-4">
-                <Avatar name={mockStudent.name} size="sm" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{mockStudent.name}</span>
-              </div>
-              
-              {/* Mobile Logout */}
-              <button
-                onClick={() => {
-                  logout();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors w-full"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Sign Out</span>
-              </button>
             </div>
           </div>
         )}
