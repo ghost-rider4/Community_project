@@ -2,57 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, TrendingUp, Filter } from 'lucide-react';
 import { ProjectCard } from '../components/feed/ProjectCard';
 import { Button } from '../components/ui/Button';
-import { mockProjects } from '../utils/mockData';
-import { Project } from '../types';
 
 export const Home: React.FC = () => {
-  const [posts, setPosts] = useState<Project[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState<'all' | 'trending' | 'following'>('all');
 
-  // Simulate loading more posts
-  const loadMorePosts = () => {
-    if (loading) return;
-    
-    setLoading(true);
-    setTimeout(() => {
-      // Simulate API call - duplicate and modify existing posts with new IDs
-      const newPosts = mockProjects.map((project, index) => ({
-        ...project,
-        id: `${project.id}-${posts.length + index}`,
-        createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        likes: Math.floor(Math.random() * 500) + 50,
-        authorName: ['Maya Patel', 'Jordan Kim', 'Sophia Rodriguez', 'Ethan Zhang', 'Aria Johnson'][Math.floor(Math.random() * 5)]
-      }));
-      
-      setPosts(prev => [...prev, ...newPosts]);
-      setLoading(false);
-      
-      // Simulate end of content after 20 posts
-      if (posts.length + newPosts.length >= 20) {
-        setHasMore(false);
-      }
-    }, 1000);
-  };
-
-  // Load initial posts
+  // Empty state - no mock data
   useEffect(() => {
-    loadMorePosts();
+    // In a real app, this would fetch from Firebase
+    setPosts([]);
+    setLoading(false);
+    setHasMore(false);
   }, []);
-
-  // Infinite scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || loading || !hasMore) {
-        return;
-      }
-      loadMorePosts();
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loading, hasMore, posts.length]);
 
   const filters = [
     { id: 'all', label: 'All Posts', icon: Sparkles },
@@ -105,15 +68,6 @@ export const Home: React.FC = () => {
         {loading && (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-          </div>
-        )}
-
-        {/* End of Content */}
-        {!hasMore && posts.length > 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-              You've reached the end! Check back later for more amazing content.
-            </p>
           </div>
         )}
 

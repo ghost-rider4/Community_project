@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
 import { ProjectCard } from '../components/feed/ProjectCard';
 import { Button } from '../components/ui/Button';
-import { mockProjects } from '../utils/mockData';
 
 export const Explore: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -15,6 +14,9 @@ export const Explore: React.FC = () => {
     { id: 'art', label: 'Art' },
     { id: 'technology', label: 'Technology' }
   ];
+
+  // Empty state for projects
+  const projects: any[] = [];
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -86,9 +88,22 @@ export const Explore: React.FC = () => {
           ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
           : 'grid-cols-1'
       }`}>
-        {mockProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
+        {projects.length === 0 ? (
+          <div className="col-span-full text-center py-16">
+            <div className="text-6xl mb-4">🎨</div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No projects yet
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Be the first to share your amazing work with the community!
+            </p>
+            <Button>Upload Your Project</Button>
+          </div>
+        ) : (
+          projects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))
+        )}
       </div>
     </div>
   );

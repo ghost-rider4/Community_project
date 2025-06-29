@@ -4,36 +4,30 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
-import { mockStudent } from '../utils/mockData';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Profile: React.FC = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    bio: 'Passionate about music and physics. Currently exploring the intersection of sound waves and quantum mechanics.',
+    bio: 'Passionate about learning and exploring new talents.',
     location: 'San Francisco, CA',
-    website: 'https://alexchen.dev',
+    website: 'https://myportfolio.dev',
     achievements: [
-      'Winner of Regional Piano Competition 2024',
-      'Published research on quantum entanglement',
-      'Mentored 15+ students in physics'
+      'Completed first project upload',
+      'Joined the community',
+      'Started learning journey'
     ],
     experiences: [
       {
         id: '1',
-        title: 'Physics Research Intern',
-        organization: 'Stanford University',
-        period: 'Summer 2024',
-        description: 'Conducted research on quantum computing applications'
-      },
-      {
-        id: '2',
-        title: 'Piano Instructor',
-        organization: 'Local Music Academy',
-        period: '2023 - Present',
-        description: 'Teaching classical piano to students aged 8-16'
+        title: 'Student',
+        organization: 'ElevatED Community',
+        period: '2024 - Present',
+        description: 'Active member of the gifted learning community'
       }
     ],
-    skills: ['Piano', 'Physics', 'Mathematics', 'Research', 'Teaching']
+    skills: user?.talents?.map(t => t.name) || []
   });
 
   const [newAchievement, setNewAchievement] = useState('');
@@ -86,6 +80,17 @@ export const Profile: React.FC = () => {
     }));
   };
 
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Profile Not Found</h1>
+          <p className="text-gray-600 dark:text-gray-400">Please sign in to view your profile.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -120,10 +125,10 @@ export const Profile: React.FC = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-start gap-6">
-              <Avatar name={mockStudent.name} size="lg" />
+              <Avatar name={user.name} size="lg" />
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {mockStudent.name}
+                  {user.name}
                 </h2>
                 <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                   <div className="flex items-center gap-1">
@@ -141,7 +146,7 @@ export const Profile: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>Joined {mockStudent.joinedAt.toLocaleDateString()}</span>
+                    <span>Joined {new Date().toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <LinkIcon className="w-4 h-4" />
@@ -178,30 +183,32 @@ export const Profile: React.FC = () => {
 
                 {/* Talents */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {mockStudent.talents.map((talent) => (
+                  {user.talents?.map((talent) => (
                     <Badge key={talent.id} variant="default">
                       {talent.name} - {talent.level}
                     </Badge>
-                  ))}
+                  )) || (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No talents selected yet</p>
+                  )}
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {mockStudent.points.toLocaleString()}
+                      {user.points || 0}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Points</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {mockStudent.level}
+                      {user.level || 1}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Level</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {mockStudent.achievements.filter(a => a.unlockedAt).length}
+                      {user.achievements?.filter((a: any) => a.unlockedAt).length || 0}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Achievements</div>
                   </div>
