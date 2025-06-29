@@ -15,6 +15,8 @@ import { Account } from './pages/Account';
 import { Profile } from './pages/Profile';
 import { Onboarding } from './pages/Onboarding';
 import { MentorOnboarding } from './pages/MentorOnboarding';
+import { TalentSelection } from './pages/TalentSelection';
+import { PsychometricAssessment } from './pages/PsychometricAssessment';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 
@@ -63,6 +65,8 @@ const AppContent: React.FC = () => {
           <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to={getOnboardingRoute()} replace />} />
           <Route path="/onboarding" element={isAuthenticated && user?.role === 'student' ? <Onboarding /> : <Navigate to="/signin" replace />} />
           <Route path="/mentor-onboarding" element={isAuthenticated && user?.role === 'mentor' ? <MentorOnboarding /> : <Navigate to="/signin" replace />} />
+          <Route path="/talent-selection" element={isAuthenticated ? <TalentSelection /> : <Navigate to="/signin" replace />} />
+          <Route path="/psychometric-assessment" element={isAuthenticated ? <PsychometricAssessment /> : <Navigate to="/signin" replace />} />
           <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" replace />} />
           <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signin" replace />} />
           <Route path="/explore" element={isAuthenticated ? <Explore /> : <Navigate to="/signin" replace />} />

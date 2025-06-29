@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,7 +22,16 @@ export const SignIn: React.FC = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      // Enhanced error handling with specific messages
+      if (err.message.includes('user-not-found') || err.message.includes('No account found')) {
+        setError('No account found with this email address. Please sign up first.');
+      } else if (err.message.includes('wrong-password') || err.message.includes('Incorrect password')) {
+        setError('Incorrect password. Please try again.');
+      } else if (err.message.includes('invalid-credential')) {
+        setError('Invalid email or password. Please check your credentials.');
+      } else {
+        setError(err.message);
+      }
     }
   };
 
@@ -37,7 +46,11 @@ export const SignIn: React.FC = () => {
       setResetEmailSent(true);
       setError('');
     } catch (err: any) {
-      setError(err.message);
+      if (err.message.includes('user-not-found')) {
+        setError('No account found with this email address. Please sign up first.');
+      } else {
+        setError(err.message);
+      }
     }
   };
 
@@ -73,7 +86,20 @@ export const SignIn: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg animate-slide-up">
-                  <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</p>
+                      {error.includes('Please sign up first') && (
+                        <p className="text-red-500 dark:text-red-400 text-sm mt-2">
+                          Don't have an account?{' '}
+                          <Link to="/signup" className="font-medium underline hover:no-underline">
+                            Create one here
+                          </Link>
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

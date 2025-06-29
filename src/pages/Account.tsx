@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Camera, Save, Eye, EyeOff } from 'lucide-react';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { User, Mail, Lock, Camera, Save, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'firebase/auth';
+import { doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../config/firebase';
 
 export const Account: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile');
-  const { user, firebaseUser, updateUserProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'danger'>('profile');
+  const { user, firebaseUser, updateUserProfile, logout } = useAuth();
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -29,6 +31,9 @@ export const Account: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -113,10 +118,49 @@ export const Account: React.FC = () => {
     setMessage({ type: 'success', text: 'Preferences saved successfully!' });
   };
 
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      setMessage({ type: 'error', text: 'Please enter your password to confirm deletion' });
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      if (!firebaseUser || !user?.email) {
+        throw new Error('No user logged in');
+      }
+
+      // Re-authenticate user before deletion
+      const credential = EmailAuthProvider.credential(user.email, deletePassword);
+      await reauthenticateWithCredential(firebaseUser, credential);
+
+      // Delete user data from Firestore
+      await deleteDoc(doc(db, 'users', firebaseUser.uid));
+
+      // Delete Firebase Auth user
+      await deleteUser(firebaseUser);
+
+      // User will be automatically logged out
+      setMessage({ type: 'success', text: 'Account deleted successfully' });
+      
+    } catch (error: any) {
+      if (error.code === 'auth/wrong-password') {
+        setMessage({ type: 'error', text: 'Incorrect password' });
+      } else {
+        setMessage({ type: 'error', text: error.message });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Lock },
-    { id: 'preferences', label: 'Preferences', icon: Mail }
+    { id: 'preferences', label: 'Preferences', icon: Mail },
+    { id: 'danger', label: 'Account Deletion', icon: Trash2 }
   ];
 
   return (
@@ -149,7 +193,9 @@ export const Account: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-4 py-3 rounded-t-lg font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-purple-600 text-white border-b-2 border-purple-600'
+                  ? tab.id === 'danger' 
+                    ? 'bg-red-600 text-white border-b-2 border-red-600'
+                    : 'bg-purple-600 text-white border-b-2 border-purple-600'
                   : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
               }`}
             >
@@ -361,6 +407,108 @@ export const Account: React.FC = () => {
                 <Save className="w-4 h-4" />
                 Save Preferences
               </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Danger Zone Tab */}
+      {activeTab === 'danger' && (
+        <div className="space-y-6">
+          <Card className="border-red-200 dark:border-red-800">
+            <CardHeader className="bg-red-50 dark:bg-red-900/20">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">Delete Account</h3>
+                  <p className="text-sm text-red-700 dark:text-red-400">
+                    This action cannot be undone. All your data will be permanently deleted.
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {!showDeleteConfirm ? (
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-900 dark:text-yellow-300 mb-2">
+                      What will be deleted:
+                    </h4>
+                    <ul className="text-sm text-yellow-800 dark:text-yellow-400 space-y-1">
+                      <li>• Your profile and personal information</li>
+                      <li>• All uploaded projects and content</li>
+                      <li>• Progress tracking and achievements</li>
+                      <li>• Club memberships and connections</li>
+                      <li>• Chat history and messages</li>
+                    </ul>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    I want to delete my account
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <h4 className="font-medium text-red-900 dark:text-red-300 mb-2">
+                      Final Confirmation
+                    </h4>
+                    <p className="text-sm text-red-800 dark:text-red-400">
+                      Please enter your password to confirm account deletion. This action is irreversible.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Enter your password to confirm
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showDeletePassword ? 'text' : 'password'}
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="w-full px-4 py-3 pr-12 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="Enter your password"
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDeletePassword(!showDeletePassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        disabled={isLoading}
+                      >
+                        {showDeletePassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={handleDeleteAccount}
+                      disabled={!deletePassword || isLoading}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isLoading ? 'Deleting...' : 'Delete My Account'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setDeletePassword('');
+                      }}
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
