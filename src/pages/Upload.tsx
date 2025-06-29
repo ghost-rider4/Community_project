@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Upload as UploadIcon, Image, Video, FileText, X, Plus, Tag, Globe, Users, Lock } from 'lucide-react';
+import { Upload as UploadIcon, Image, Video, FileText, X, Plus, Tag, Globe, Users, Lock, CheckCircle } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { storage, db } from '../config/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -14,6 +18,9 @@ export const Upload: React.FC = () => {
   const [visibility, setVisibility] = useState<'public' | 'clubs' | 'private'>('public');
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const { user } = useAuth();
 
   const talents = [
     'Music', 'Piano', 'Guitar', 'Violin', 'Vocals',
@@ -67,18 +74,77 @@ export const Upload: React.FC = () => {
     setTags(prev => prev.filter(tag => tag !== tagToRemove));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadFileToStorage = async (file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+    const filePath = `projects/${user.id}/${fileName}`;
+    
+    const storageRef = ref(storage, filePath);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    return downloadURL;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle upload logic here
-    console.log({
-      title,
-      description,
-      talent,
-      tags,
-      visibility,
-      files,
-      uploadType
-    });
+    
+    if (!user) {
+      alert('You must be logged in to upload projects');
+      return;
+    }
+
+    if (files.length === 0) {
+      alert('Please select at least one file to upload');
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // Upload files to Firebase Storage
+      const uploadPromises = files.map(file => uploadFileToStorage(file));
+      const fileUrls = await Promise.all(uploadPromises);
+      
+      // Create project document in Firestore
+      const projectData = {
+        title,
+        description,
+        authorId: user.id,
+        authorName: user.name,
+        talent,
+        mediaUrls: fileUrls,
+        mediaType: uploadType,
+        tags,
+        visibility,
+        likes: 0,
+        comments: [],
+        createdAt: serverTimestamp(),
+        verified: false
+      };
+
+      await addDoc(collection(db, 'projects'), projectData);
+      
+      // Update user's project count
+      // This could be done with a cloud function or here
+      
+      setUploadSuccess(true);
+      
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setTalent('');
+      setTags([]);
+      setFiles([]);
+      
+    } catch (error) {
+      console.error('Error uploading project:', error);
+      alert('Failed to upload project. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getUploadTypeIcon = (type: string) => {
@@ -98,6 +164,30 @@ export const Upload: React.FC = () => {
       default: return <Globe className="w-4 h-4" />;
     }
   };
+
+  if (uploadSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-8">
+          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-green-900 dark:text-green-300 mb-2">
+            Project Uploaded Successfully!
+          </h1>
+          <p className="text-green-700 dark:text-green-400 mb-6">
+            Your project has been submitted and is now under review. You'll be notified once it's approved.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button onClick={() => setUploadSuccess(false)}>
+              Upload Another Project
+            </Button>
+            <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+              Go to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -340,12 +430,14 @@ export const Upload: React.FC = () => {
 
         {/* Submit */}
         <div className="flex gap-4">
-          <Button type="submit" className="flex-1" size="lg">
+          <Button 
+            type="submit" 
+            className="flex-1" 
+            size="lg"
+            disabled={isUploading || files.length === 0}
+          >
             <UploadIcon className="w-5 h-5" />
-            Publish Project
-          </Button>
-          <Button type="button" variant="outline" size="lg">
-            Save Draft
+            {isUploading ? 'Uploading...' : 'Publish Project'}
           </Button>
         </div>
       </form>

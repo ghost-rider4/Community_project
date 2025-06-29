@@ -8,7 +8,7 @@ import {
   updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 interface User {
@@ -18,6 +18,8 @@ interface User {
   role: 'student' | 'mentor';
   photoURL?: string;
   createdAt: Date;
+  onboardingCompleted?: boolean;
+  profileSetup?: boolean;
 }
 
 interface AuthContextType {
@@ -29,6 +31,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (data: { name?: string; photoURL?: string }) => Promise<void>;
+  updateUserData: (data: any) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -66,7 +69,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: firebaseUser.email || '',
               role: userData.role || 'student',
               photoURL: firebaseUser.photoURL || undefined,
-              createdAt: userData.createdAt?.toDate() || new Date()
+              createdAt: userData.createdAt?.toDate() || new Date(),
+              onboardingCompleted: userData.onboardingCompleted || false,
+              profileSetup: userData.profileSetup || false
             });
           } else {
             // Create user document if it doesn't exist
@@ -76,14 +81,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: firebaseUser.email || '',
               role: 'student' as const,
               photoURL: firebaseUser.photoURL || undefined,
-              createdAt: new Date()
+              createdAt: new Date(),
+              onboardingCompleted: false,
+              profileSetup: false
             };
             
             await setDoc(doc(db, 'users', firebaseUser.uid), {
               name: newUser.name,
               email: newUser.email,
               role: newUser.role,
-              createdAt: newUser.createdAt
+              createdAt: newUser.createdAt,
+              onboardingCompleted: false,
+              profileSetup: false
             });
             
             setUser(newUser);
@@ -97,7 +106,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: firebaseUser.email || '',
             role: 'student',
             photoURL: firebaseUser.photoURL || undefined,
-            createdAt: new Date()
+            createdAt: new Date(),
+            onboardingCompleted: false,
+            profileSetup: false
           });
         }
       } else {
@@ -132,17 +143,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await updateProfile(firebaseUser, { displayName: name });
 
       // Create user document in Firestore
-      await setDoc(doc(db, 'users', firebaseUser.uid), {
+      const userData = {
         name,
         email,
         role,
         createdAt: new Date(),
+        onboardingCompleted: false,
+        profileSetup: false,
         // Initialize additional fields for students
         ...(role === 'student' && {
           talents: [],
-          skillLevel: 'beginner',
+          skillLevel: 'Beginner',
           points: 0,
-          tier: 'bronze',
+          tier: 'Bronze',
           level: 1,
           experience: 0,
           nextLevelExp: 100,
@@ -150,7 +163,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           psychometricCompleted: false,
           verificationStatus: 'pending',
           achievements: [],
-          streaks: []
+          streaks: [],
+          projects: []
         }),
         // Initialize additional fields for mentors
         ...(role === 'mentor' && {
@@ -158,9 +172,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           experience: '',
           rating: 0,
           studentsCount: 0,
-          availability: true
+          availability: true,
+          bio: '',
+          location: '',
+          education: '',
+          certifications: [],
+          specializations: [],
+          mentorshipAreas: [],
+          preferredStudentLevel: [],
+          maxStudents: 10,
+          currentStudents: [],
+          completedSessions: 0,
+          verified: false
         })
-      });
+      };
+
+      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
     } catch (error: any) {
       setIsLoading(false);
@@ -192,7 +219,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await updateProfile(firebaseUser, data);
 
       // Update Firestore document
-      await setDoc(doc(db, 'users', firebaseUser.uid), data, { merge: true });
+      await updateDoc(doc(db, 'users', firebaseUser.uid), data);
+
+      // Update local user state
+      setUser(prev => prev ? { ...prev, ...data } : null);
+    } catch (error: any) {
+      throw new Error(getErrorMessage(error.code));
+    }
+  };
+
+  const updateUserData = async (data: any) => {
+    if (!firebaseUser) throw new Error('No user logged in');
+
+    try {
+      // Update Firestore document
+      await updateDoc(doc(db, 'users', firebaseUser.uid), data);
 
       // Update local user state
       setUser(prev => prev ? { ...prev, ...data } : null);
@@ -208,6 +249,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return 'No account found with this email address.';
       case 'auth/wrong-password':
         return 'Incorrect password.';
+      case 'auth/invalid-credential':
+        return 'Invalid email or password.';
       case 'auth/email-already-in-use':
         return 'An account with this email already exists.';
       case 'auth/weak-password':
@@ -233,6 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout,
       resetPassword,
       updateUserProfile,
+      updateUserData,
       isLoading
     }}>
       {children}

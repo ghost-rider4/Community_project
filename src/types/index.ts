@@ -43,8 +43,8 @@ export interface Talent {
   level: SkillLevel;
 }
 
-export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
-export type Tier = 'bronze' | 'silver' | 'gold' | 'diamond';
+export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+export type Tier = 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
 
 export interface Project {
   id: string;

@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
-import { ArrowRight, Music, Palette, Atom, Code, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Music, Palette, Atom, Code, ArrowLeft, Brain, SkipForward } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
+import { useAuth } from '../contexts/AuthContext';
 
-type OnboardingStep = 'welcome' | 'psychometric' | 'talents' | 'verification' | 'complete';
+type OnboardingStep = 'welcome' | 'psychometric' | 'talents' | 'achievements' | 'complete';
 
 export const Onboarding: React.FC = () => {
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [selectedTalents, setSelectedTalents] = useState<string[]>([]);
+  const [achievements, setAchievements] = useState<Array<{talent: string, level: string, description: string}>>([]);
+  const [psychometricSkipped, setPsychometricSkipped] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { updateUserData } = useAuth();
+  const navigate = useNavigate();
   
   const talents = [
     { id: 'music', name: 'Music', icon: Music, description: 'Piano, Guitar, Violin, Vocals' },
@@ -15,6 +22,8 @@ export const Onboarding: React.FC = () => {
     { id: 'science', name: 'Science', icon: Atom, description: 'Physics, Chemistry, Biology' },
     { id: 'technology', name: 'Technology', icon: Code, description: 'Programming, AI, Robotics' }
   ];
+
+  const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
   
   const handleTalentToggle = (talentId: string) => {
     setSelectedTalents(prev => 
@@ -22,6 +31,40 @@ export const Onboarding: React.FC = () => {
         ? prev.filter(id => id !== talentId)
         : [...prev, talentId]
     );
+  };
+
+  const handleAddAchievement = (talent: string, level: string, description: string) => {
+    setAchievements(prev => [...prev, { talent, level, description }]);
+  };
+
+  const handleCompleteOnboarding = async () => {
+    setIsLoading(true);
+    try {
+      const talentData = selectedTalents.map(talentId => {
+        const talent = talents.find(t => t.id === talentId);
+        const achievement = achievements.find(a => a.talent === talentId);
+        return {
+          id: talentId,
+          name: talent?.name || talentId,
+          category: talent?.name || talentId,
+          level: achievement?.level || 'Beginner'
+        };
+      });
+
+      await updateUserData({
+        talents: talentData,
+        achievements: achievements,
+        psychometricCompleted: !psychometricSkipped,
+        onboardingCompleted: true,
+        verificationStatus: 'pending'
+      });
+
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const renderStep = () => {
@@ -48,11 +91,17 @@ export const Onboarding: React.FC = () => {
             
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               <Card className="p-6 text-left">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">🎯 Personalized Experience</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <Brain className="w-6 h-6 text-purple-600" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white">🎯 Personalized Experience</h3>
+                </div>
                 <p className="text-gray-600 dark:text-gray-400">Take our psychometric assessment to get tailored recommendations</p>
               </Card>
               <Card className="p-6 text-left">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">🚀 Skip & Explore</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <SkipForward className="w-6 h-6 text-purple-600" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white">🚀 Skip & Explore</h3>
+                </div>
                 <p className="text-gray-600 dark:text-gray-400">Jump straight to talent selection if you know what interests you</p>
               </Card>
             </div>
@@ -62,7 +111,10 @@ export const Onboarding: React.FC = () => {
                 Take Assessment
                 <ArrowRight className="w-5 h-5" />
               </Button>
-              <Button variant="outline" onClick={() => setStep('talents')} size="lg">
+              <Button variant="outline" onClick={() => {
+                setPsychometricSkipped(true);
+                setStep('talents');
+              }} size="lg">
                 Skip to Talents
               </Button>
             </div>
@@ -182,12 +234,12 @@ export const Onboarding: React.FC = () => {
             </div>
             
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep('psychometric')}>
+              <Button variant="outline" onClick={() => setStep(psychometricSkipped ? 'welcome' : 'psychometric')}>
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
               <Button 
-                onClick={() => setStep('verification')}
+                onClick={() => setStep('achievements')}
                 disabled={selectedTalents.length === 0}
               >
                 Continue
@@ -197,13 +249,13 @@ export const Onboarding: React.FC = () => {
           </div>
         );
         
-      case 'verification':
+      case 'achievements':
         return (
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Showcase Your Skills</h2>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Add Your Achievements</h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Upload examples of your work to help us understand your current level. This helps us match you with the right peers and mentors.
+                Tell us about your current level in each talent area for verification purposes.
               </p>
             </div>
             
@@ -212,29 +264,53 @@ export const Onboarding: React.FC = () => {
                 <div className="space-y-6">
                   {selectedTalents.map((talentId) => {
                     const talent = talents.find(t => t.id === talentId);
+                    const existingAchievement = achievements.find(a => a.talent === talentId);
+                    
                     return (
                       <div key={talentId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                         <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{talent?.name}</h3>
                         
-                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                          <div className="space-y-4">
-                            <div className="text-gray-500 dark:text-gray-400">
-                              <p>Drop files here or click to browse</p>
-                              <p className="text-sm">Supported: Images, Videos, Documents (Max 50MB)</p>
-                            </div>
-                            <Button variant="outline">
-                              Choose Files
-                            </Button>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Current Level
+                            </label>
+                            <select
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              defaultValue={existingAchievement?.level || ''}
+                              onChange={(e) => {
+                                const level = e.target.value;
+                                const description = existingAchievement?.description || '';
+                                setAchievements(prev => 
+                                  prev.filter(a => a.talent !== talentId).concat([{ talent: talentId, level, description }])
+                                );
+                              }}
+                            >
+                              <option value="">Select your level</option>
+                              {skillLevels.map((level) => (
+                                <option key={level} value={level}>{level}</option>
+                              ))}
+                            </select>
                           </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <label className="flex items-center space-x-2">
-                            <input type="checkbox" className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              I'm just starting out - mark me as a beginner
-                            </span>
-                          </label>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Description (Optional)
+                            </label>
+                            <textarea
+                              rows={2}
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                              placeholder="Describe your experience, achievements, or projects in this area..."
+                              defaultValue={existingAchievement?.description || ''}
+                              onChange={(e) => {
+                                const description = e.target.value;
+                                const level = existingAchievement?.level || '';
+                                setAchievements(prev => 
+                                  prev.filter(a => a.talent !== talentId).concat([{ talent: talentId, level, description }])
+                                );
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     );
@@ -270,7 +346,7 @@ export const Onboarding: React.FC = () => {
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
               Your profile is being set up. You'll receive verification results within 24 hours. 
-              In the meantime, explore the platform and connect with your community!
+              Let's create your public profile to showcase your talents!
             </p>
             
             <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -288,8 +364,8 @@ export const Onboarding: React.FC = () => {
               </Card>
             </div>
             
-            <Button size="lg" onClick={() => window.location.href = '/dashboard'}>
-              Enter ElevatED
+            <Button size="lg" onClick={handleCompleteOnboarding} disabled={isLoading}>
+              {isLoading ? 'Setting up...' : 'Create My Profile'}
               <ArrowRight className="w-5 h-5" />
             </Button>
           </div>

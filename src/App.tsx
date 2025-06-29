@@ -14,6 +14,7 @@ import { Progress } from './pages/Progress';
 import { Account } from './pages/Account';
 import { Profile } from './pages/Profile';
 import { Onboarding } from './pages/Onboarding';
+import { MentorOnboarding } from './pages/MentorOnboarding';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 
@@ -32,20 +33,36 @@ const LoadingSpinner: React.FC = () => (
 );
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
     return <LoadingSpinner />;
   }
+
+  // Determine onboarding route based on user role and completion status
+  const getOnboardingRoute = () => {
+    if (!user) return '/signin';
+    
+    if (!user.onboardingCompleted) {
+      return user.role === 'mentor' ? '/mentor-onboarding' : '/onboarding';
+    }
+    
+    if (!user.profileSetup) {
+      return '/profile';
+    }
+    
+    return '/dashboard';
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Header />
       <main>
         <Routes>
-          <Route path="/signin" element={!isAuthenticated ? <SignIn /> : <Navigate to="/" replace />} />
-          <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to="/" replace />} />
-          <Route path="/onboarding" element={isAuthenticated ? <Onboarding /> : <Navigate to="/signin" replace />} />
+          <Route path="/signin" element={!isAuthenticated ? <SignIn /> : <Navigate to={getOnboardingRoute()} replace />} />
+          <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to={getOnboardingRoute()} replace />} />
+          <Route path="/onboarding" element={isAuthenticated && user?.role === 'student' ? <Onboarding /> : <Navigate to="/signin" replace />} />
+          <Route path="/mentor-onboarding" element={isAuthenticated && user?.role === 'mentor' ? <MentorOnboarding /> : <Navigate to="/signin" replace />} />
           <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/signin" replace />} />
           <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signin" replace />} />
           <Route path="/explore" element={isAuthenticated ? <Explore /> : <Navigate to="/signin" replace />} />
