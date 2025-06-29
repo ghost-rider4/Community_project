@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Header } from './components/layout/Header';
 import { Home } from './pages/Home';
@@ -11,6 +12,8 @@ import { Explore } from './pages/Explore';
 import { Upload } from './pages/Upload';
 import { Opportunities } from './pages/Opportunities';
 import { Mentors } from './pages/Mentors';
+import { MentorCategories } from './pages/MentorCategories';
+import { Events } from './pages/Events';
 import { Clubs } from './pages/Clubs';
 import { Progress } from './pages/Progress';
 import { Account } from './pages/Account';
@@ -137,7 +140,12 @@ const AppContent: React.FC = () => {
           } />
           <Route path="/mentors" element={
             <ProtectedRoute requiredRole="student">
-              <Mentors />
+              <MentorCategories />
+            </ProtectedRoute>
+          } />
+          <Route path="/events" element={
+            <ProtectedRoute>
+              <Events />
             </ProtectedRoute>
           } />
           <Route path="/clubs" element={
@@ -170,9 +178,11 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <NotificationProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

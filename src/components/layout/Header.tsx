@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload, BookOpen, Calendar, MessageSquare } from 'lucide-react';
+import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload, BookOpen, Calendar } from 'lucide-react';
 import { ProfileDropdown } from './ProfileDropdown';
+import { NotificationCenter } from '../notifications/NotificationCenter';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 export const Header: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -17,6 +21,7 @@ export const Header: React.FC = () => {
       return [
         { path: '/mentor-dashboard', label: 'Dashboard', icon: BookOpen },
         { path: '/explore', label: 'Explore', icon: Compass },
+        { path: '/events', label: 'Events', icon: Calendar },
         { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
         { path: '/clubs', label: 'Clubs', icon: Users }
       ];
@@ -25,6 +30,7 @@ export const Header: React.FC = () => {
         { path: '/dashboard', label: 'Home', icon: Home },
         { path: '/explore', label: 'Explore', icon: Compass },
         { path: '/upload', label: 'Upload', icon: Upload },
+        { path: '/events', label: 'Events', icon: Calendar },
         { path: '/opportunities', label: 'Opportunities', icon: Briefcase },
         { path: '/mentors', label: 'Mentors', icon: UserCheck },
         { path: '/clubs', label: 'Clubs', icon: Users },
@@ -99,7 +105,7 @@ export const Header: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search projects, mentors..."
+                placeholder="Search projects, mentors, events..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
@@ -133,9 +139,17 @@ export const Header: React.FC = () => {
               <Search className="w-5 h-5" />
             </button>
             
-            <button className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            {/* Notifications */}
+            <button 
+              onClick={() => setIsNotificationOpen(true)}
+              className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             
             {/* Profile Dropdown */}
@@ -177,6 +191,12 @@ export const Header: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Notification Center */}
+      <NotificationCenter 
+        isOpen={isNotificationOpen} 
+        onClose={() => setIsNotificationOpen(false)} 
+      />
     </header>
   );
 };
