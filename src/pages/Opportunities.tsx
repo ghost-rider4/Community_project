@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { Filter, MapPin, Calendar, Briefcase } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { useNotifications } from '../contexts/NotificationContext';
 
 export const Opportunities: React.FC = () => {
   const [selectedType, setSelectedType] = useState('all');
+  const [locationFilter, setLocationFilter] = useState(false);
+  const [deadlineFilter, setDeadlineFilter] = useState(false);
+  const { addNotification } = useNotifications();
   
   const types = [
     { id: 'all', label: 'All Opportunities' },
@@ -11,6 +15,38 @@ export const Opportunities: React.FC = () => {
     { id: 'project', label: 'Projects' },
     { id: 'placement', label: 'Placements' }
   ];
+
+  const handleGetNotified = () => {
+    addNotification({
+      id: Date.now().toString(),
+      type: 'success',
+      title: 'Notifications Enabled!',
+      message: 'You will be notified when new opportunities become available.',
+      timestamp: new Date()
+    });
+  };
+
+  const handleLocationFilter = () => {
+    setLocationFilter(!locationFilter);
+    addNotification({
+      id: Date.now().toString(),
+      type: 'info',
+      title: 'Location Filter',
+      message: `Location filter ${!locationFilter ? 'enabled' : 'disabled'}`,
+      timestamp: new Date()
+    });
+  };
+
+  const handleDeadlineFilter = () => {
+    setDeadlineFilter(!deadlineFilter);
+    addNotification({
+      id: Date.now().toString(),
+      type: 'info',
+      title: 'Deadline Filter',
+      message: `Deadline filter ${!deadlineFilter ? 'enabled' : 'disabled'}`,
+      timestamp: new Date()
+    });
+  };
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -44,11 +80,21 @@ export const Opportunities: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleLocationFilter}
+              className={locationFilter ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-300 dark:border-purple-600' : ''}
+            >
               <MapPin className="w-4 h-4" />
               Location
             </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleDeadlineFilter}
+              className={deadlineFilter ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-300 dark:border-purple-600' : ''}
+            >
               <Calendar className="w-4 h-4" />
               Deadline
             </Button>
@@ -65,7 +111,7 @@ export const Opportunities: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           We're working on bringing you amazing opportunities. Check back soon!
         </p>
-        <Button>Get Notified</Button>
+        <Button onClick={handleGetNotified}>Get Notified</Button>
       </div>
     </div>
   );

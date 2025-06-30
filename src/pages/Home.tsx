@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, TrendingUp, Filter } from 'lucide-react';
 import { ProjectCard } from '../components/feed/ProjectCard';
 import { Button } from '../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 export const Home: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState<'all' | 'trending' | 'following'>('all');
+  const navigate = useNavigate();
 
   // Empty state - no mock data
   useEffect(() => {
@@ -81,7 +83,7 @@ export const Home: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm sm:text-base">
               Be the first to share your amazing work with the community!
             </p>
-            <Button>Share Your Project</Button>
+            <Button onClick={() => navigate('/upload')}>Share Your Project</Button>
           </div>
         )}
       </div>
