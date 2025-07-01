@@ -47,11 +47,12 @@ export const SignUp: React.FC = () => {
 
     try {
       await signup(formData.name.trim(), formData.email, formData.password, formData.role);
-      if (formData.role === 'student') {
-        navigate('/onboarding');
-      } else {
-        navigate('/dashboard');
+      // Immediately log out after sign up so user is not authenticated
+      if (typeof window !== 'undefined') {
+        const { logout } = require('../contexts/AuthContext');
+        if (logout) await logout();
       }
+      navigate('/signin');
     } catch (err: any) {
       setError(err.message);
     }

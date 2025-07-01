@@ -112,106 +112,6 @@ export const MentorCategories: React.FC = () => {
     { id: 'expert', label: 'Expert' }
   ];
 
-  // Sample mentors data (in real app, this would come from Firebase)
-  const sampleMentors: Mentor[] = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Martinez',
-      email: 'sarah.martinez@university.edu',
-      expertise: ['Machine Learning', 'Data Science', 'Python', 'Research'],
-      categories: ['technology', 'academic'],
-      experience: '10+ years in AI research at MIT',
-      rating: 4.9,
-      studentsCount: 23,
-      availability: true,
-      location: 'Boston, MA',
-      bio: 'AI researcher and professor specializing in machine learning applications in healthcare.',
-      education: 'PhD in Computer Science, MIT',
-      certifications: ['Google Cloud ML Engineer', 'AWS ML Specialty'],
-      specializations: ['Healthcare AI', 'Computer Vision', 'NLP'],
-      preferredStudentLevel: ['intermediate', 'advanced'],
-      hourlyRate: 150,
-      responseTime: '< 2 hours',
-      languages: ['English', 'Spanish'],
-      timezone: 'EST',
-      verified: true,
-      completedSessions: 156,
-      joinedAt: new Date('2023-01-15')
-    },
-    {
-      id: '2',
-      name: 'Marcus Thompson',
-      email: 'marcus.thompson@conservatory.edu',
-      expertise: ['Piano', 'Music Theory', 'Composition', 'Performance'],
-      categories: ['arts'],
-      experience: 'Concert pianist and music educator with 15+ years experience',
-      rating: 4.8,
-      studentsCount: 18,
-      availability: true,
-      location: 'New York, NY',
-      bio: 'Professional pianist and composer helping students develop their musical talents.',
-      education: 'Master of Music, Juilliard School',
-      certifications: ['Certified Music Educator', 'Suzuki Method Certified'],
-      specializations: ['Classical Piano', 'Jazz', 'Music Composition'],
-      preferredStudentLevel: ['beginner', 'intermediate', 'advanced'],
-      hourlyRate: 120,
-      responseTime: '< 4 hours',
-      languages: ['English'],
-      timezone: 'EST',
-      verified: true,
-      completedSessions: 89,
-      joinedAt: new Date('2023-03-20')
-    },
-    {
-      id: '3',
-      name: 'Dr. Emily Rodriguez',
-      email: 'emily.rodriguez@techcorp.com',
-      expertise: ['Entrepreneurship', 'Product Management', 'Startup Strategy'],
-      categories: ['business', 'professional-development'],
-      experience: 'Serial entrepreneur and tech executive',
-      rating: 4.9,
-      studentsCount: 31,
-      availability: false,
-      location: 'Seattle, WA',
-      bio: 'Former startup founder turned mentor, helping young entrepreneurs build successful companies.',
-      education: 'MBA Stanford, BS Computer Science',
-      certifications: ['Certified Product Manager', 'Lean Startup Certified'],
-      specializations: ['Tech Startups', 'Product Strategy', 'Fundraising'],
-      preferredStudentLevel: ['intermediate', 'advanced'],
-      hourlyRate: 200,
-      responseTime: '< 6 hours',
-      languages: ['English', 'Spanish'],
-      timezone: 'PST',
-      verified: true,
-      completedSessions: 203,
-      joinedAt: new Date('2022-11-10')
-    },
-    {
-      id: '4',
-      name: 'Prof. David Chen',
-      email: 'david.chen@university.edu',
-      expertise: ['Physics', 'Mathematics', 'Research Methods'],
-      categories: ['science', 'academic'],
-      experience: 'Physics professor and researcher with 20+ years experience',
-      rating: 4.7,
-      studentsCount: 15,
-      availability: true,
-      location: 'Cambridge, MA',
-      bio: 'Theoretical physicist passionate about making complex concepts accessible to students.',
-      education: 'PhD in Physics, Harvard University',
-      certifications: ['Certified Science Educator'],
-      specializations: ['Quantum Physics', 'Mathematical Physics', 'Research Methodology'],
-      preferredStudentLevel: ['advanced', 'expert'],
-      hourlyRate: 130,
-      responseTime: '< 3 hours',
-      languages: ['English', 'Mandarin'],
-      timezone: 'EST',
-      verified: true,
-      completedSessions: 67,
-      joinedAt: new Date('2023-05-08')
-    }
-  ];
-
   useEffect(() => {
     loadMentors();
   }, []);
@@ -223,8 +123,20 @@ export const MentorCategories: React.FC = () => {
   const loadMentors = async () => {
     try {
       setIsLoading(true);
-      // In a real implementation, this would fetch from Firebase
-      setMentors(sampleMentors);
+      const mentorsQuery = query(
+        collection(db, 'users'),
+        where('role', '==', 'mentor')
+      );
+      const snapshot = await getDocs(mentorsQuery);
+      const mentorsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          joinedAt: data.joinedAt?.toDate ? data.joinedAt.toDate() : new Date(),
+        };
+      }) as Mentor[];
+      setMentors(mentorsData);
     } catch (error) {
       console.error('Error loading mentors:', error);
     } finally {

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Users, Plus, TrendingUp, Crown, Star, Calendar, MessageSquare, Settings, UserPlus } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 interface Club {
   id: string;
@@ -47,87 +49,29 @@ export const Clubs: React.FC = () => {
     { id: 'others', label: 'Others', icon: '✨' }
   ];
 
-  // Sample clubs data (in real app, this would come from Firebase)
-  const sampleClubs: Club[] = [
-    {
-      id: '1',
-      name: 'Young Innovators Tech Hub',
-      category: 'science-technology',
-      description: 'Building the future through code, AI, and innovation. Weekly hackathons and project showcases.',
-      memberCount: 247,
-      leaderId: 'mentor1',
-      leaderName: 'Dr. Sarah Martinez',
-      isVerified: true,
-      tags: ['AI', 'Programming', 'Innovation', 'Hackathons'],
-      recentActivity: 'New AI workshop scheduled for next week',
-      createdAt: new Date('2024-01-15'),
-      maxMembers: 300,
-      isPrivate: false,
-      requirements: ['Basic programming knowledge', 'Passion for technology']
-    },
-    {
-      id: '2',
-      name: 'Creative Writers Circle',
-      category: 'literature-writing',
-      description: 'Where words come alive and stories find their voice. Monthly writing challenges and peer reviews.',
-      memberCount: 189,
-      leaderId: 'mentor2',
-      leaderName: 'Prof. Emily Chen',
-      isVerified: true,
-      tags: ['Creative Writing', 'Poetry', 'Storytelling', 'Publishing'],
-      recentActivity: 'New poetry challenge: "Emotions in Color"',
-      createdAt: new Date('2024-01-20'),
-      maxMembers: 200,
-      isPrivate: false
-    },
-    {
-      id: '3',
-      name: 'Eco Warriors',
-      category: 'environmental-sustainability',
-      description: 'Passionate about protecting our planet. Join us for environmental projects and sustainability initiatives.',
-      memberCount: 156,
-      leaderId: 'mentor3',
-      leaderName: 'Dr. Michael Green',
-      isVerified: true,
-      tags: ['Environment', 'Sustainability', 'Climate Action', 'Conservation'],
-      recentActivity: 'Planning campus cleanup drive',
-      createdAt: new Date('2024-02-01'),
-      maxMembers: 250,
-      isPrivate: false
-    },
-    {
-      id: '4',
-      name: 'Digital Artists United',
-      category: 'art-design',
-      description: 'Exploring digital creativity through various mediums. From concept art to 3D modeling.',
-      memberCount: 134,
-      leaderId: 'mentor4',
-      leaderName: 'Isabella Rodriguez',
-      isVerified: true,
-      tags: ['Digital Art', '3D Modeling', 'Animation', 'Design'],
-      recentActivity: 'New tutorial: Advanced Blender techniques',
-      createdAt: new Date('2024-01-25'),
-      maxMembers: 180,
-      isPrivate: false
-    },
-    {
-      id: '5',
-      name: 'Debate Champions',
-      category: 'debate-public-speaking',
-      description: 'Sharpen your argumentation skills and public speaking confidence. Weekly debates on current topics.',
-      memberCount: 98,
-      leaderId: 'mentor5',
-      leaderName: 'Prof. David Wilson',
-      isVerified: true,
-      tags: ['Debate', 'Public Speaking', 'Argumentation', 'Current Events'],
-      recentActivity: 'Upcoming debate: "AI in Education"',
-      createdAt: new Date('2024-02-05'),
-      maxMembers: 120,
-      isPrivate: false
-    }
-  ];
+  // Remove sampleClubs and use real fetching
+  const [clubs, setClubs] = useState<Club[]>([]);
 
-  const [clubs] = useState<Club[]>(sampleClubs);
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        const clubsQuery = collection(db, 'clubs');
+        const snapshot = await getDocs(clubsQuery);
+        const clubsData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+          };
+        }) as Club[];
+        setClubs(clubsData);
+      } catch (error) {
+        console.error('Error fetching clubs:', error);
+      }
+    };
+    fetchClubs();
+  }, []);
 
   const filteredClubs = clubs.filter(club => {
     const matchesCategory = selectedCategory === 'all' || club.category === selectedCategory;

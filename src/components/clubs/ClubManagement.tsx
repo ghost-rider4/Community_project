@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Users, Calendar, MessageSquare, Settings, UserPlus, UserMinus, Award, BarChart3, FileText, Video } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Calendar, MessageSquare, Settings, UserPlus, UserMinus, Award, BarChart3, FileText, Video, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Avatar } from '../ui/Avatar';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 
 interface ClubMember {
   id: string;
@@ -34,48 +36,49 @@ interface ClubManagementProps {
 export const ClubManagement: React.FC<ClubManagementProps> = ({ clubId, clubName, isLeader }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'activities' | 'events' | 'settings'>('overview');
   
-  // Mock data - in real app, this would come from Firebase
-  const [members] = useState<ClubMember[]>([
-    {
-      id: '1',
-      name: 'Alex Chen',
-      email: 'alex@example.com',
-      joinedAt: new Date('2024-01-15'),
-      role: 'member',
-      contributions: 15,
-      lastActive: new Date()
-    },
-    {
-      id: '2',
-      name: 'Maya Patel',
-      email: 'maya@example.com',
-      joinedAt: new Date('2024-01-20'),
-      role: 'moderator',
-      contributions: 23,
-      lastActive: new Date()
-    }
-  ]);
+  // Remove mock members and activities, use real fetching
+  const [members, setMembers] = useState<ClubMember[]>([]);
+  const [activities, setActivities] = useState<ClubActivity[]>([]);
 
-  const [activities] = useState<ClubActivity[]>([
-    {
-      id: '1',
-      type: 'project',
-      title: 'AI Music Composer',
-      description: 'Collaborative project to build an AI that composes music',
-      createdBy: 'Alex Chen',
-      createdAt: new Date('2024-02-01'),
-      participants: 8
-    },
-    {
-      id: '2',
-      type: 'event',
-      title: 'Weekly Jam Session',
-      description: 'Virtual music collaboration session',
-      createdBy: 'Maya Patel',
-      createdAt: new Date('2024-02-05'),
-      participants: 12
-    }
-  ]);
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const membersQuery = collection(db, 'clubs', clubId, 'members');
+        const snapshot = await getDocs(membersQuery);
+        const membersData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            joinedAt: data.joinedAt?.toDate ? data.joinedAt.toDate() : new Date(),
+            lastActive: data.lastActive?.toDate ? data.lastActive.toDate() : new Date(),
+          };
+        }) as ClubMember[];
+        setMembers(membersData);
+      } catch (error) {
+        console.error('Error fetching club members:', error);
+      }
+    };
+    const fetchActivities = async () => {
+      try {
+        const activitiesQuery = collection(db, 'clubs', clubId, 'activities');
+        const snapshot = await getDocs(activitiesQuery);
+        const activitiesData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+          };
+        }) as ClubActivity[];
+        setActivities(activitiesData);
+      } catch (error) {
+        console.error('Error fetching club activities:', error);
+      }
+    };
+    fetchMembers();
+    fetchActivities();
+  }, [clubId]);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },

@@ -62,80 +62,6 @@ export const Events: React.FC = () => {
     { id: 'social', label: 'Social Events', icon: '🎉' }
   ];
 
-  // Sample events data (in real app, this would come from Firebase)
-  const sampleEvents: Event[] = [
-    {
-      id: '1',
-      title: 'AI in Music Composition Workshop',
-      description: 'Learn how artificial intelligence is revolutionizing music composition. Hands-on workshop with industry experts.',
-      category: 'workshop',
-      organizer: 'mentor1',
-      organizerName: 'Dr. Sarah Martinez',
-      startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours duration
-      location: 'Virtual',
-      isVirtual: true,
-      maxAttendees: 50,
-      attendees: [],
-      registeredUsers: [],
-      requirements: ['Basic music theory knowledge', 'Computer with internet access'],
-      materials: ['Digital Audio Workstation (DAW)', 'Notebook for taking notes'],
-      meetingLink: 'https://meet.google.com/abc-defg-hij',
-      tags: ['AI', 'Music', 'Technology', 'Composition'],
-      difficulty: 'intermediate',
-      price: 0,
-      featured: true,
-      status: 'upcoming',
-      createdAt: new Date(),
-      feedback: { rating: 4.8, reviews: 23 }
-    },
-    {
-      id: '2',
-      title: 'Young Entrepreneurs Networking Event',
-      description: 'Connect with like-minded young entrepreneurs and learn from successful business leaders.',
-      category: 'networking',
-      organizer: 'mentor2',
-      organizerName: 'Marcus Thompson',
-      startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-      endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000), // 3 hours duration
-      location: 'San Francisco, CA',
-      isVirtual: false,
-      maxAttendees: 30,
-      attendees: [],
-      registeredUsers: [],
-      tags: ['Business', 'Networking', 'Entrepreneurship'],
-      difficulty: 'all',
-      price: 25,
-      featured: false,
-      status: 'upcoming',
-      createdAt: new Date(),
-      feedback: { rating: 4.6, reviews: 15 }
-    },
-    {
-      id: '3',
-      title: 'Digital Art Masterclass',
-      description: 'Advanced techniques in digital art and illustration with professional artist Isabella Rodriguez.',
-      category: 'masterclass',
-      organizer: 'mentor3',
-      organizerName: 'Isabella Rodriguez',
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
-      endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000), // 4 hours duration
-      location: 'Virtual',
-      isVirtual: true,
-      maxAttendees: 25,
-      attendees: [],
-      registeredUsers: [],
-      requirements: ['Adobe Creative Suite', 'Drawing tablet (recommended)'],
-      materials: ['Reference images', 'Sketchbook'],
-      tags: ['Digital Art', 'Illustration', 'Design'],
-      difficulty: 'advanced',
-      price: 50,
-      featured: true,
-      status: 'upcoming',
-      createdAt: new Date()
-    }
-  ];
-
   useEffect(() => {
     loadEvents();
   }, []);
@@ -147,17 +73,24 @@ export const Events: React.FC = () => {
   const loadEvents = async () => {
     try {
       setIsLoading(true);
-      // In a real implementation, this would fetch from Firebase
-      setEvents(sampleEvents);
-      
-      // Load user's registered events
+      const eventsQuery = collection(db, 'events');
+      const snapshot = await getDocs(eventsQuery);
+      const eventsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          startDate: data.startDate?.toDate ? data.startDate.toDate() : new Date(),
+          endDate: data.endDate?.toDate ? data.endDate.toDate() : new Date(),
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+        };
+      }) as Event[];
+      setEvents(eventsData);
+      // Load user's registered events and past events as before
       if (user) {
-        // This would come from user document or separate registrations collection
-        setRegisteredEvents([]);
+        setRegisteredEvents([]); // TODO: Implement real user registrations
       }
-      
-      // Load past events
-      setPastEvents([]);
+      setPastEvents([]); // TODO: Implement real past events
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
