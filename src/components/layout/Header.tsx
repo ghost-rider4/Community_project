@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload, BookOpen, Calendar } from 'lucide-react';
 import { ProfileDropdown } from './ProfileDropdown';
 import { NotificationCenter } from '../notifications/NotificationCenter';
@@ -10,10 +10,16 @@ export const Header: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const { unreadCount } = useNotifications();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleMobileSearch = () => {
+    navigate('/explore');
+    // You could also implement a search modal here instead
+  };
 
   // Different navigation items based on user role
   const getNavigationItems = () => {
@@ -135,7 +141,10 @@ export const Header: React.FC = () => {
           {/* User Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Mobile Search Button */}
-            <button className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <button 
+              onClick={handleMobileSearch}
+              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+            >
               <Search className="w-5 h-5" />
             </button>
             

@@ -2,8 +2,21 @@ import React from 'react';
 import { Zap, Clock, Users, Target } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 export const DailyChallenges: React.FC = () => {
+  const { addNotification } = useNotifications();
+
+  const handleGetNotified = () => {
+    addNotification({
+      id: Date.now().toString(),
+      type: 'success',
+      title: 'Notification Set!',
+      message: 'You will be notified when daily challenges become available.',
+      timestamp: new Date()
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -21,7 +34,7 @@ export const DailyChallenges: React.FC = () => {
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Daily challenges are coming soon! Check back later for exciting tasks.
           </p>
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={handleGetNotified}>
             Get Notified
           </Button>
         </div>

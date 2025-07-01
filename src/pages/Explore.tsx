@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
 import { ProjectCard } from '../components/feed/ProjectCard';
 import { Button } from '../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 export const Explore: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const navigate = useNavigate();
   
   const filters = [
     { id: 'all', label: 'All Projects' },
@@ -97,7 +99,7 @@ export const Explore: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Be the first to share your amazing work with the community!
             </p>
-            <Button>Upload Your Project</Button>
+            <Button onClick={() => navigate('/upload')}>Upload Your Project</Button>
           </div>
         ) : (
           projects.map((project) => (

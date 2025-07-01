@@ -5,6 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -37,6 +39,8 @@ export const MentorDashboard: React.FC = () => {
   const [sessions, setSessions] = useState<MentorSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.role === 'mentor') {
@@ -56,6 +60,42 @@ export const MentorDashboard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleScheduleSession = () => {
+    addNotification({
+      id: Date.now().toString(),
+      type: 'info',
+      title: 'Schedule Session',
+      message: 'Session scheduling feature coming soon!',
+      timestamp: new Date()
+    });
+  };
+
+  const handleMessageStudents = () => {
+    setActiveTab('messages');
+  };
+
+  const handleReviewProgress = () => {
+    setActiveTab('students');
+  };
+
+  const handleFindStudents = () => {
+    navigate('/explore');
+  };
+
+  const handleNotifications = () => {
+    addNotification({
+      id: Date.now().toString(),
+      type: 'info',
+      title: 'Notifications',
+      message: 'You have no new notifications.',
+      timestamp: new Date()
+    });
+  };
+
+  const handleSettings = () => {
+    navigate('/account');
   };
 
   const tabs = [
@@ -148,7 +188,7 @@ export const MentorDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="flex items-center gap-2 h-auto p-4">
+            <Button className="flex items-center gap-2 h-auto p-4" onClick={handleScheduleSession}>
               <Plus className="w-5 h-5" />
               <div className="text-left">
                 <div className="font-medium">Schedule Session</div>
@@ -156,7 +196,7 @@ export const MentorDashboard: React.FC = () => {
               </div>
             </Button>
             
-            <Button variant="outline" className="flex items-center gap-2 h-auto p-4">
+            <Button variant="outline" className="flex items-center gap-2 h-auto p-4" onClick={handleMessageStudents}>
               <MessageSquare className="w-5 h-5" />
               <div className="text-left">
                 <div className="font-medium">Message Students</div>
@@ -164,7 +204,7 @@ export const MentorDashboard: React.FC = () => {
               </div>
             </Button>
             
-            <Button variant="outline" className="flex items-center gap-2 h-auto p-4">
+            <Button variant="outline" className="flex items-center gap-2 h-auto p-4" onClick={handleReviewProgress}>
               <Award className="w-5 h-5" />
               <div className="text-left">
                 <div className="font-medium">Review Progress</div>
@@ -190,7 +230,13 @@ export const MentorDashboard: React.FC = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => addNotification({
+            id: Date.now().toString(),
+            type: 'info',
+            title: 'Filter',
+            message: 'Student filtering coming soon!',
+            timestamp: new Date()
+          })}>
             <Filter className="w-4 h-4" />
             Filter
           </Button>
@@ -207,7 +253,7 @@ export const MentorDashboard: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Students will appear here once they request mentorship or are assigned to you.
             </p>
-            <Button>
+            <Button onClick={handleFindStudents}>
               <Plus className="w-4 h-4" />
               Find Students
             </Button>
@@ -356,11 +402,11 @@ export const MentorDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleNotifications}>
               <Bell className="w-4 h-4" />
               Notifications
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleSettings}>
               <Settings className="w-4 h-4" />
               Settings
             </Button>

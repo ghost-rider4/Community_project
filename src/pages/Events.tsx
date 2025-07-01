@@ -483,7 +483,11 @@ export const Events: React.FC = () => {
               : 'Check back soon for exciting events and workshops!'
             }
           </p>
-          <Button>
+          <Button onClick={() => {
+            if (user) {
+              scheduleEventReminder('general', 'Events Notification', new Date(Date.now() + 24 * 60 * 60 * 1000));
+            }
+          }}>
             <Bell className="w-4 h-4" />
             Get Notified
           </Button>

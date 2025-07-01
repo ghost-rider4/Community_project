@@ -6,11 +6,13 @@ import { Badge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Avatar } from '../components/ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export const Progress: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'leaderboard' | 'rewards'>('overview');
   const [timeSpent, setTimeSpent] = useState(0);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Real-time progress tracking
   useEffect(() => {
@@ -155,7 +157,7 @@ export const Progress: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           Start completing challenges and projects to earn your first achievements!
         </p>
-        <Button>Explore Challenges</Button>
+        <Button onClick={() => navigate('/opportunities')}>Explore Challenges</Button>
       </div>
     </div>
   );
