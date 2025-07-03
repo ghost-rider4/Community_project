@@ -5,12 +5,17 @@ import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { Mentor } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import { ChatModal } from '../chat/ChatModal';
 
 interface MentorCardProps {
   mentor: Mentor;
 }
 
 export const MentorCard: React.FC<MentorCardProps> = ({ mentor }) => {
+  const { user } = useAuth();
+  const [chatOpen, setChatOpen] = React.useState(false);
+
   return (
     <Card hover>
       <CardContent className="p-4 sm:p-6">
@@ -56,6 +61,15 @@ export const MentorCard: React.FC<MentorCardProps> = ({ mentor }) => {
           <Button variant="outline" size="sm" className="text-sm">
             View Profile
           </Button>
+          <Button variant="secondary" size="sm" className="text-sm" onClick={() => setChatOpen(true)}>
+            Chat
+          </Button>
+          <ChatModal
+            open={chatOpen}
+            onClose={() => setChatOpen(false)}
+            channelType="messaging"
+            members={[user?.id, mentor.id]}
+          />
         </div>
       </CardContent>
     </Card>

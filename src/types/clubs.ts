@@ -23,6 +23,7 @@ export interface Club {
     discord?: string;
     slack?: string;
   };
+  members: string[];
 }
 
 export interface ClubMember {

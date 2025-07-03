@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users, Plus, TrendingUp, Crown, Star, Calendar, MessageSquare, Settings, UserPlus } from 'lucide-react';
+import { Search, Users, Plus, TrendingUp, Crown, Star, Calendar, MessageSquare, Settings, UserPlus, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -7,6 +7,9 @@ import { Avatar } from '../components/ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { listenToClubs, joinClub, createClub, deleteClub, leaveClub } from '../services/clubService';
+import { ChatModal } from '../components/chat/ChatModal';
+import { ClubCard } from '../components/community/ClubCard';
 
 interface Club {
   id: string;
@@ -23,22 +26,27 @@ interface Club {
   maxMembers?: number;
   isPrivate: boolean;
   requirements?: string[];
+  members?: string[];
 }
 
 export const Clubs: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('featured');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { user } = useAuth();
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [selectedClubForChat, setSelectedClubForChat] = useState<Club | null>(null);
+  const [selectedClubForDetails, setSelectedClubForDetails] = useState<Club | null>(null);
   
   // Comprehensive club categories for students
   const studentCategories = [
-    { id: 'all', label: 'All Clubs', icon: '🌟' },
+    { id: 'featured', label: 'Featured Clubs', icon: '🌟' },
+    { id: 'all', label: 'All Clubs', icon: '🌞' },
     { id: 'music-performance', label: 'Music & Performance', icon: '🎵' },
-    { id: 'science-technology', label: 'Science & Technology', icon: '🔬' },
+    { id: 'science-technology', label: 'Science & Technology', icon: '🧑‍🔬' },
     { id: 'art-design', label: 'Art & Design', icon: '🎨' },
     { id: 'sports-athletics', label: 'Sports & Athletics', icon: '⚽' },
-    { id: 'literature-writing', label: 'Literature & Writing', icon: '📚' },
+    { id: 'literature-writing', label: 'Literature & Writing', icon: '🗂️' },
     { id: 'environmental-sustainability', label: 'Environmental & Sustainability', icon: '🌱' },
     { id: 'debate-public-speaking', label: 'Debate & Public Speaking', icon: '🎤' },
     { id: 'gaming-esports', label: 'Gaming & E-sports', icon: '🎮' },
@@ -49,31 +57,15 @@ export const Clubs: React.FC = () => {
     { id: 'others', label: 'Others', icon: '✨' }
   ];
 
-  // Remove sampleClubs and use real fetching
-  const [clubs, setClubs] = useState<Club[]>([]);
-
   useEffect(() => {
-    const fetchClubs = async () => {
-      try {
-        const clubsQuery = collection(db, 'clubs');
-        const snapshot = await getDocs(clubsQuery);
-        const clubsData = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
-          };
-        }) as Club[];
-        setClubs(clubsData);
-      } catch (error) {
-        console.error('Error fetching clubs:', error);
-      }
-    };
-    fetchClubs();
+    const unsubscribe = listenToClubs((clubs) => {
+      setClubs(clubs);
+    });
+    return () => unsubscribe();
   }, []);
 
   const filteredClubs = clubs.filter(club => {
+    if (selectedCategory === 'featured') return false;
     const matchesCategory = selectedCategory === 'all' || club.category === selectedCategory;
     const matchesSearch = club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          club.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,10 +83,31 @@ export const Clubs: React.FC = () => {
       maxMembers: 100
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      // In real app, this would create a new club in Firebase
-      console.log('Creating club:', newClub);
+      if (!user) return;
+
+      const clubData = {
+        name: newClub.name,
+        category: newClub.category,
+        description: newClub.description,
+        tags: newClub.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        isPrivate: newClub.isPrivate,
+        maxMembers: newClub.maxMembers,
+        memberCount: 1,
+        leaderId: user.id,
+        leaderName: user.name,
+        isVerified: false,
+        recentActivity: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        moderators: [],
+        requirements: [],
+        members: [user.id],
+      };
+
+      try {
+        await createClub(clubData);
       setShowCreateModal(false);
       setNewClub({
         name: '',
@@ -104,6 +117,10 @@ export const Clubs: React.FC = () => {
         isPrivate: false,
         maxMembers: 100
       });
+      } catch (err) {
+        alert('Failed to create club');
+        console.error(err);
+      }
     };
 
     if (!showCreateModal) return null;
@@ -228,83 +245,84 @@ export const Clubs: React.FC = () => {
     );
   };
 
-  const ClubCard = ({ club }: { club: Club }) => (
-    <Card hover className="h-full">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-gray-900 dark:text-white">{club.name}</h3>
-              {club.isVerified && (
-                <Badge variant="default" className="bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                  <Star className="w-3 h-3 mr-1" />
-                  Verified
-                </Badge>
-              )}
-              {club.isPrivate && (
-                <Badge variant="default" className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
-                  Private
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{club.description}</p>
-          </div>
-        </div>
+  const handleJoinClub = async (clubId: string) => {
+    if (user) {
+      await joinClub(clubId, user.id);
+    }
+  };
 
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{club.memberCount}{club.maxMembers ? `/${club.maxMembers}` : ''}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Crown className="w-4 h-4" />
-            <span>{club.leaderName}</span>
-          </div>
-        </div>
+  const handleOpenChat = (club: Club) => {
+    setSelectedClubForChat(club);
+  };
+  const handleCloseChat = () => {
+    setSelectedClubForChat(null);
+  };
 
-        <div className="flex flex-wrap gap-1 mb-4">
-          {club.tags.slice(0, 3).map((tag) => (
-            <span 
-              key={tag}
-              className="px-2 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
-          {club.tags.length > 3 && (
-            <span className="px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs rounded-full">
-              +{club.tags.length - 3}
-            </span>
-          )}
-        </div>
+  const handleOpenDetails = (club: Club) => setSelectedClubForDetails(club);
+  const handleCloseDetails = () => setSelectedClubForDetails(null);
 
-        <div className="flex items-center gap-2 mb-4">
-          <MessageSquare className="w-4 h-4 text-green-500" />
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{club.recentActivity}</p>
-        </div>
+  const ClubCardWrapper = ({ club }: { club: Club }) => {
+    return (
+      <div>
+        <ClubCard club={club} onOpenChat={handleOpenChat} onOpenDetails={handleOpenDetails} />
+      </div>
+    );
+  };
 
-        <div className="flex gap-2">
-          {user?.role === 'mentor' && user.id === club.leaderId ? (
-            <Button variant="outline" size="sm" className="flex-1">
-              <Settings className="w-4 h-4" />
-              Manage
-            </Button>
-          ) : (
-            <Button size="sm" className="flex-1">
-              <UserPlus className="w-4 h-4" />
+  // Compute joined and created clubs
+  const joinedClubs = clubs.filter(club => club.members?.includes(user?.id ?? ''));
+  const createdClubs = clubs.filter(club => club.leaderId === user?.id);
+  // For mentors, joined clubs are those where they are a member but not the leader
+  const joinedButNotCreatedClubs = user?.role === 'mentor'
+    ? joinedClubs.filter(club => club.leaderId !== user.id)
+    : joinedClubs;
+  // Clubs not joined or created
+  const joinedOrCreatedIds = new Set([
+    ...joinedClubs.map(c => c.id),
+    ...createdClubs.map(c => c.id),
+  ]);
+  const filteredOtherClubs = filteredClubs.filter(club => !joinedOrCreatedIds.has(club.id));
+
+  const ClubDetailsModal = ({ club, onClose }: { club: Club; onClose: () => void }) => {
+    const { user } = useAuth();
+    const isMember = user && club.members && club.members.includes(user.id);
+    const isLeader = user && club.leaderId === user.id;
+    const handleJoinClub = async () => {
+      if (user) {
+        await joinClub(club.id, user.id);
+        onClose();
+      }
+    };
+    const handleLeaveClub = async () => {
+      if (user) {
+        await leaveClub(club.id, user.id);
+        onClose();
+      }
+    };
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+        <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8 flex flex-col items-center">
+          <button onClick={onClose} className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-purple-600">&times;</button>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{club.name}</h2>
+          <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">{club.description}</p>
+          <p className="text-md text-gray-500 dark:text-gray-400 mb-4">Admin: {club.leaderName}</p>
+          {!isMember && (
+            <Button variant="outline" size="md" className="mt-2" onClick={handleJoinClub}>
               Join Club
             </Button>
           )}
-          <Button variant="outline" size="sm">
-            View Details
+          {isMember && !isLeader && (
+            <Button variant="outline" size="md" className="mt-2" onClick={handleLeaveClub}>
+              Leave Club
           </Button>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
   );
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ paddingLeft: 80 }}>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {user?.role === 'mentor' ? 'Manage Your Clubs' : 'Join Your Tribe'}
@@ -359,14 +377,12 @@ export const Clubs: React.FC = () => {
                 />
               </div>
             </div>
-            
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                {filteredClubs.length} clubs found
+                {selectedCategory === 'featured' ? filteredClubs.length : filteredClubs.length} clubs found
               </span>
             </div>
           </div>
-          
           <div className="flex flex-wrap gap-2">
             {studentCategories.map((category) => (
               <button
@@ -386,58 +402,116 @@ export const Clubs: React.FC = () => {
         </div>
       </div>
 
-      {/* Featured Clubs */}
-      {selectedCategory === 'all' && (
+      {/* Mentor UX: Created Clubs */}
+      {user?.role === 'mentor' && createdClubs.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Users className="w-5 h-5 text-green-500" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Created Clubs</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {createdClubs.map((club) => (
+              <ClubCardWrapper key={club.id} club={club} />
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Mentor & Student UX: Joined Clubs */}
+      {joinedButNotCreatedClubs.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Users className="w-5 h-5 text-blue-500" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Joined Clubs</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {joinedButNotCreatedClubs.map((club) => (
+              <ClubCardWrapper key={club.id} club={club} />
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Featured Clubs (not joined/created) */}
+      {selectedCategory === 'featured' && filteredClubs.length > 0 && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="w-5 h-5 text-orange-500" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Featured Clubs</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clubs.slice(0, 3).map((club) => (
-              <ClubCard key={club.id} club={club} />
+            {filteredClubs.map((club) => (
+              <ClubCardWrapper key={club.id} club={club} />
+            ))}
+          </div>
+        </div>
+      )}
+      {/* All Clubs (not joined/created/featured) */}
+      {selectedCategory === 'all' && (
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <Users className="w-5 h-5 text-purple-500" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              All Clubs
+            </h2>
+          </div>
+          {filteredOtherClubs.length === 0 ? (
+            <div className="text-center py-16">
+              <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {searchTerm ? 'No clubs found' : 'No clubs in this category yet'}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {searchTerm 
+                  ? 'Try adjusting your search terms or browse other categories.'
+                  : 'Be the first to create a club in this category!'}
+              </p>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="w-4 h-4" />
+                {user?.role === 'mentor' ? 'Create Club' : 'Suggest Club'}
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredOtherClubs.map((club) => (
+                <ClubCardWrapper key={club.id} club={club} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {/* Category-specific clubs (other than featured/all) */}
+      {selectedCategory !== 'featured' && selectedCategory !== 'all' && filteredClubs.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <Users className="w-5 h-5 text-purple-500" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {studentCategories.find(c => c.id === selectedCategory)?.label || 'Clubs'}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClubs.map((club) => (
+              <ClubCardWrapper key={club.id} club={club} />
             ))}
           </div>
         </div>
       )}
 
-      {/* All Clubs */}
-      <div>
-        <div className="flex items-center gap-2 mb-6">
-          <Users className="w-5 h-5 text-purple-500" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {selectedCategory === 'all' ? 'All Clubs' : 
-             studentCategories.find(c => c.id === selectedCategory)?.label || 'Clubs'}
-          </h2>
-        </div>
-        
-        {filteredClubs.length === 0 ? (
-          <div className="text-center py-16">
-            <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {searchTerm ? 'No clubs found' : 'No clubs in this category yet'}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {searchTerm 
-                ? 'Try adjusting your search terms or browse other categories.'
-                : 'Be the first to create a club in this category!'
-              }
-            </p>
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-4 h-4" />
-              {user?.role === 'mentor' ? 'Create Club' : 'Suggest Club'}
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredClubs.map((club) => (
-              <ClubCard key={club.id} club={club} />
-            ))}
-          </div>
-        )}
-      </div>
-
       <CreateClubModal />
+
+      {/* Single ChatModal for all clubs */}
+      {selectedClubForChat && (
+        <ChatModal
+          open={!!selectedClubForChat}
+          onClose={handleCloseChat}
+          channelType="team"
+          members={selectedClubForChat.members || []}
+          channelId={`club-${selectedClubForChat.id}`}
+        />
+      )}
+
+      {/* Render ClubDetailsModal if a club is selected */}
+      {selectedClubForDetails && (
+        <ClubDetailsModal club={selectedClubForDetails} onClose={handleCloseDetails} />
+      )}
     </div>
   );
 };

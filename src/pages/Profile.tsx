@@ -1,33 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Plus, X, Award, Calendar, MapPin, Link as LinkIcon, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+
+type ProfileDataType = {
+  bio: string;
+  location: string;
+  website: string;
+  achievements: any[];
+  experiences: any[];
+  skills: any[];
+};
 
 export const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUserData } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    bio: 'Passionate about learning and exploring new talents.',
-    location: 'San Francisco, CA',
-    website: 'https://myportfolio.dev',
-    achievements: [
-      'Completed first project upload',
-      'Joined the community',
-      'Started learning journey'
-    ],
-    experiences: [
-      {
-        id: '1',
-        title: 'Student',
-        organization: 'ElevatED Community',
-        period: '2024 - Present',
-        description: 'Active member of the gifted learning community'
-      }
-    ],
-    skills: user?.talents?.map(t => t.name) || []
+  const [showPsychoReport, setShowPsychoReport] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileDataType>({
+    bio: '',
+    location: '',
+    website: '',
+    achievements: [],
+    experiences: [],
+    skills: (user as any)?.talents?.map((t: any) => t.name) || []
   });
 
   const [newAchievement, setNewAchievement] = useState('');
@@ -39,10 +41,48 @@ export const Profile: React.FC = () => {
   });
   const [showAddExperience, setShowAddExperience] = useState(false);
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log('Saving profile:', profileData);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.id));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setProfileData(prev => ({
+            ...prev,
+            bio: data.bio || '',
+            location: data.location || '',
+            website: data.website || '',
+            achievements: data.achievements || [],
+            experiences: data.experiences || [],
+            skills: Array.isArray(data.talents)
+              ? (typeof data.talents[0] === 'object'
+                  ? data.talents
+                  : data.talents.map((name: string) => ({ name, level: '' })))
+              : [],
+          }));
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchProfile();
+    // Only run when user changes
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      await updateUserData({
+        bio: profileData.bio,
+        location: profileData.location,
+        website: profileData.website,
+        achievements: profileData.achievements,
+        experiences: profileData.experiences,
+      });
     setIsEditing(false);
+    } catch (error) {
+      alert('Failed to save profile. Please try again.');
+    }
   };
 
   const addAchievement = () => {
@@ -120,6 +160,69 @@ export const Profile: React.FC = () => {
         </div>
       </div>
 
+      {/* Psychometric Test Section */}
+      {(user as any)?.role === 'student' && (
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Psychometric Assessment</h2>
+                {!(user as any)?.psychometricCompleted ? (
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">Take the assessment to get personalized recommendations for your learning journey.</p>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">You have completed the assessment. View your personalized recommendations below.</p>
+                )}
+              </div>
+              <div>
+                {!(user as any)?.psychometricCompleted ? (
+                  <Button onClick={() => navigate('/psychometric-assessment')}>Take Psychometric Test</Button>
+                ) : (
+                  <Button variant="outline" onClick={() => setShowPsychoReport(v => !v)}>
+                    {showPsychoReport ? 'Hide Recommendations' : 'View Recommendations'}
+                  </Button>
+                )}
+              </div>
+            </div>
+            {/* Show recommendations if completed and toggled */}
+            {(user as any)?.psychometricCompleted && showPsychoReport && (user as any)?.psychometricResults && (
+              <div className="mt-6 bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-300 mb-4">Your Personalized Recommendations</h3>
+                <div className="mb-2">
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Strengths:</span>
+                  <ul className="list-disc ml-6">
+                    {(user as any)?.psychometricResults?.report?.strengths?.map((s: string, i: number) => (
+                      <li key={i} className="text-purple-700 dark:text-purple-300">{s}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mb-2">
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Recommendations:</span>
+                  <ul className="list-disc ml-6">
+                    {(user as any)?.psychometricResults?.report?.recommendations?.map((r: string, i: number) => (
+                      <li key={i} className="text-purple-700 dark:text-purple-300">{r}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mb-2 text-purple-700 dark:text-purple-300">
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Learning Style:</span> <span className="text-purple-700 dark:text-purple-300">{(user as any)?.psychometricResults?.report?.learningStyle}</span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Career Suggestions:</span>
+                  <ul className="list-disc ml-6">
+                    {(user as any)?.psychometricResults?.report?.careerSuggestions?.map((c: string, i: number) => (
+                      <li key={i} className="text-purple-700 dark:text-purple-300">{c}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mb-2 text-purple-700 dark:text-purple-300">
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Personality Type:</span> <span className="text-purple-700 dark:text-purple-300">{(user as any)?.psychometricResults?.report?.personalityType}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="space-y-8">
         {/* Basic Info */}
         <Card>
@@ -183,11 +286,13 @@ export const Profile: React.FC = () => {
 
                 {/* Talents */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {user.talents?.map((talent) => (
-                    <Badge key={talent.id} variant="default">
-                      {talent.name} - {talent.level}
+                  {profileData.skills && profileData.skills.length > 0 ? (
+                    profileData.skills.map((talent: any, idx: number) => (
+                      <Badge key={talent.name || idx} variant="default">
+                        {talent.name ? `${talent.name} - ${talent.level}` : talent}
                     </Badge>
-                  )) || (
+                    ))
+                  ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-sm">No talents selected yet</p>
                   )}
                 </div>
@@ -196,19 +301,19 @@ export const Profile: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {user.points || 0}
+                      {(user as any)?.points || 0}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Points</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {user.level || 1}
+                      {(user as any)?.level || 1}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Level</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {user.achievements?.filter((a: any) => a.unlockedAt).length || 0}
+                      {(user as any)?.achievements?.filter((a: any) => a.unlockedAt).length || 0}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Achievements</div>
                   </div>
@@ -221,49 +326,28 @@ export const Profile: React.FC = () => {
         {/* Achievements */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-yellow-500" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Achievements</h3>
-              </div>
-              {isEditing && (
-                <Button variant="outline" size="sm" onClick={() => setNewAchievement('')}>
-                  <Plus className="w-4 h-4" />
-                  Add Achievement
-                </Button>
-              )}
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-3">
-              {profileData.achievements.map((achievement, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <span className="text-gray-900 dark:text-white">{achievement}</span>
-                  {isEditing && (
-                    <button
-                      onClick={() => removeAchievement(index)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+            <div className="space-y-4">
+              {profileData.achievements?.length > 0 ? (
+                profileData.achievements.map((ach: any, idx: number) => (
+                  <div key={idx} className="p-4 border border-yellow-200 dark:border-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/10">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Award className="w-5 h-5 text-yellow-500" />
+                      <span className="font-semibold text-gray-900 dark:text-white text-lg">{ach.talent}</span>
+                      <span className="ml-2 px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">{ach.level}</span>
+                    </div>
+                    {ach.description && (
+                      <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">{ach.description}</p>
                   )}
                 </div>
-              ))}
-
-              {isEditing && (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newAchievement}
-                    onChange={(e) => setNewAchievement(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addAchievement()}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="Add a new achievement..."
-                  />
-                  <Button onClick={addAchievement} size="sm">
-                    Add
-                  </Button>
-                </div>
+                ))
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400">No achievements added yet.</p>
               )}
             </div>
           </CardContent>

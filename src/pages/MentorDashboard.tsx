@@ -9,6 +9,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { ChatModal } from '../components/chat/ChatModal';
 
 interface Student {
   id: string;
@@ -41,6 +42,7 @@ export const MentorDashboard: React.FC = () => {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
+  const [chatStudentId, setChatStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role === 'mentor') {
@@ -289,7 +291,16 @@ export const MentorDashboard: React.FC = () => {
                 <div className="flex gap-2">
                   <Button size="sm" className="flex-1">Message</Button>
                   <Button size="sm" variant="outline">Schedule</Button>
+                  <Button variant="secondary" size="sm" onClick={() => setChatStudentId(student.id)}>
+                    Chat
+                  </Button>
                 </div>
+                <ChatModal
+                  open={chatStudentId === student.id}
+                  onClose={() => setChatStudentId(null)}
+                  channelType="messaging"
+                  members={[user?.id, student.id]}
+                />
               </CardContent>
             </Card>
           ))}
@@ -389,7 +400,7 @@ export const MentorDashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ paddingLeft: 80 }}>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">

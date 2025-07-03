@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, createContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Search, Home, Compass, Briefcase, Users, UserCheck, Menu, X, Trophy, Upload, BookOpen, Calendar } from 'lucide-react';
 import { ProfileDropdown } from './ProfileDropdown';
 import { NotificationCenter } from '../notifications/NotificationCenter';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+
+export const SidebarContext = createContext({
+  isMenuExpanded: false,
+  sidebarCollapsedWidth: 56,
+  sidebarExpandedWidth: 180,
+  setIsMenuExpanded: (v: boolean) => {},
+});
 
 export const Header: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -13,6 +20,9 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isMenuExpanded, setIsMenuExpanded] = useState(false);
+  const sidebarCollapsedWidth = 56;
+  const sidebarExpandedWidth = 180;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -85,7 +95,39 @@ export const Header: React.FC = () => {
   }
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
+    <SidebarContext.Provider value={{ isMenuExpanded, sidebarCollapsedWidth, sidebarExpandedWidth, setIsMenuExpanded }}>
+      {/* Sidebar */}
+      <aside
+        className="fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 z-50 flex flex-col items-center transition-all duration-200"
+        onMouseEnter={() => setIsMenuExpanded(true)}
+        onMouseLeave={() => setIsMenuExpanded(false)}
+        style={{ width: isMenuExpanded ? sidebarExpandedWidth : sidebarCollapsedWidth, minWidth: isMenuExpanded ? sidebarExpandedWidth : sidebarCollapsedWidth }}
+      >
+        <nav className="flex flex-col items-center gap-2 mt-8 w-full">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors text-sm w-[90%] mx-auto ${
+                  isActive(item.path)
+                    ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/10'
+                }`}
+                style={{ justifyContent: isMenuExpanded ? 'flex-start' : 'center' }}
+              >
+                <Icon className="w-5 h-5" />
+                {isMenuExpanded && <span className="whitespace-nowrap ml-2">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+      {/* Main Content Wrapper */}
+      <div style={{ marginLeft: sidebarCollapsedWidth }}>
+        {/* Main Header Content */}
+        <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40" style={{ width: `calc(100% - ${sidebarCollapsedWidth}px)` }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -116,27 +158,6 @@ export const Header: React.FC = () => {
               />
             </div>
           </div>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-2">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link 
-                  key={item.path}
-                  to={item.path} 
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${
-                    isActive(item.path) 
-                      ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' 
-                      : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/10'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
           
           {/* User Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
@@ -173,6 +194,8 @@ export const Header: React.FC = () => {
             </button>
           </div>
         </div>
+          </div>
+        </header>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
@@ -206,6 +229,6 @@ export const Header: React.FC = () => {
         isOpen={isNotificationOpen} 
         onClose={() => setIsNotificationOpen(false)} 
       />
-    </header>
+    </SidebarContext.Provider>
   );
 };

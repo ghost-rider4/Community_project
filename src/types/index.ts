@@ -7,6 +7,8 @@ export interface User {
   role: 'student' | 'mentor';
   avatar?: string;
   joinedAt: Date;
+  psychometricCompleted?: boolean;
+  psychometricResults?: any;
 }
 
 export interface Student extends User {

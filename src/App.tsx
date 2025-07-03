@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { Header } from './components/layout/Header';
+import { Header, SidebarContext } from './components/layout/Header';
 import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
 import { MentorDashboard } from './pages/MentorDashboard';
@@ -20,11 +20,11 @@ import { Account } from './pages/Account';
 import { Profile } from './pages/Profile';
 import { Onboarding } from './pages/Onboarding';
 import { MentorOnboarding } from './pages/MentorOnboarding';
-import { TalentSelection } from './pages/TalentSelection';
 import { PsychometricAssessment } from './pages/PsychometricAssessment';
 import { Achievements } from './pages/Achievements';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
+import { StreamChatProvider } from './contexts/StreamChatContext';
 
 const LoadingSpinner: React.FC = () => (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -42,6 +42,9 @@ const LoadingSpinner: React.FC = () => (
 
 const AppContent: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [isOtherTalent, setIsOtherTalent] = useState(false);
+  const { isMenuExpanded, sidebarCollapsedWidth, sidebarExpandedWidth } = useContext(SidebarContext);
+  const sidebarWidth = isMenuExpanded ? sidebarExpandedWidth : sidebarCollapsedWidth;
   
   if (isLoading) {
     return <LoadingSpinner />;
@@ -68,7 +71,8 @@ const AppContent: React.FC = () => {
     return user.role === 'mentor' ? '/mentor-dashboard' : '/dashboard';
   };
   
-  return (
+  // Wrap the main content in StreamChatProvider if user is authenticated
+  const content = (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Header />
       <main>
@@ -80,11 +84,6 @@ const AppContent: React.FC = () => {
           <Route path="/onboarding" element={
             <ProtectedRoute requiredRole="student">
               <Onboarding />
-            </ProtectedRoute>
-          } />
-          <Route path="/talent-selection" element={
-            <ProtectedRoute requiredRole="student">
-              <TalentSelection />
             </ProtectedRoute>
           } />
           <Route path="/psychometric-assessment" element={
@@ -172,6 +171,11 @@ const AppContent: React.FC = () => {
       </main>
     </div>
   );
+
+  if (isAuthenticated && user?.id) {
+    return <StreamChatProvider userId={user.id} userName={user.name}>{content}</StreamChatProvider>;
+  }
+  return content;
 };
 
 function App() {

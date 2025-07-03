@@ -17,7 +17,7 @@ export const SignUp: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const { signup, isLoading } = useAuth();
+  const { signup, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,10 +48,7 @@ export const SignUp: React.FC = () => {
     try {
       await signup(formData.name.trim(), formData.email, formData.password, formData.role);
       // Immediately log out after sign up so user is not authenticated
-      if (typeof window !== 'undefined') {
-        const { logout } = require('../contexts/AuthContext');
-        if (logout) await logout();
-      }
+      await logout();
       navigate('/signin');
     } catch (err: any) {
       setError(err.message);

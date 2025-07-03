@@ -20,6 +20,10 @@ interface User {
   createdAt: Date;
   onboardingCompleted?: boolean;
   profileSetup?: boolean;
+  psychometricCompleted?: boolean;
+  psychometricResults?: any;
+  achievements: string[];
+  talents: string[];
 }
 
 interface AuthContextType {
@@ -71,7 +75,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               photoURL: firebaseUser.photoURL || undefined,
               createdAt: userData.createdAt?.toDate() || new Date(),
               onboardingCompleted: userData.onboardingCompleted || false,
-              profileSetup: userData.profileSetup || false
+              profileSetup: userData.profileSetup || false,
+              psychometricCompleted: userData.psychometricCompleted,
+              psychometricResults: userData.psychometricResults,
+              achievements: userData.achievements || [],
+              talents: userData.talents || [],
             });
           } else {
             // Create user document if it doesn't exist
@@ -83,7 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               photoURL: firebaseUser.photoURL || undefined,
               createdAt: new Date(),
               onboardingCompleted: false,
-              profileSetup: false
+              profileSetup: false,
+              psychometricCompleted: false,
+              psychometricResults: null,
+              achievements: [],
+              talents: [],
             };
             
             await setDoc(doc(db, 'users', firebaseUser.uid), {
@@ -92,7 +104,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               role: newUser.role,
               createdAt: newUser.createdAt,
               onboardingCompleted: false,
-              profileSetup: false
+              profileSetup: false,
+              psychometricCompleted: false,
+              psychometricResults: null,
+              achievements: [],
+              talents: [],
             });
             
             setUser(newUser);
@@ -108,7 +124,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             photoURL: firebaseUser.photoURL || undefined,
             createdAt: new Date(),
             onboardingCompleted: false,
-            profileSetup: false
+            profileSetup: false,
+            psychometricCompleted: false,
+            psychometricResults: null,
+            achievements: [],
+            talents: [],
           });
         }
       } else {
@@ -150,6 +170,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date(),
         onboardingCompleted: false,
         profileSetup: false,
+        psychometricCompleted: false,
+        psychometricResults: null,
         // Initialize additional fields for students
         ...(role === 'student' && {
           talents: [],
@@ -160,7 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           experience: 0,
           nextLevelExp: 100,
           clubs: [],
-          psychometricCompleted: false,
           verificationStatus: 'pending',
           achievements: [],
           streaks: [],
