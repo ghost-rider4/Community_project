@@ -265,7 +265,7 @@ export const Clubs: React.FC = () => {
     return (
       <div>
         <ClubCard club={club} onOpenChat={handleOpenChat} onOpenDetails={handleOpenDetails} />
-      </div>
+        </div>
     );
   };
 
@@ -446,30 +446,30 @@ export const Clubs: React.FC = () => {
       )}
       {/* All Clubs (not joined/created/featured) */}
       {selectedCategory === 'all' && (
-        <div>
-          <div className="flex items-center gap-2 mb-6">
-            <Users className="w-5 h-5 text-purple-500" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+      <div>
+        <div className="flex items-center gap-2 mb-6">
+          <Users className="w-5 h-5 text-purple-500" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               All Clubs
-            </h2>
-          </div>
+          </h2>
+        </div>
           {filteredOtherClubs.length === 0 ? (
-            <div className="text-center py-16">
-              <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {searchTerm ? 'No clubs found' : 'No clubs in this category yet'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {searchTerm 
-                  ? 'Try adjusting your search terms or browse other categories.'
+          <div className="text-center py-16">
+            <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              {searchTerm ? 'No clubs found' : 'No clubs in this category yet'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {searchTerm 
+                ? 'Try adjusting your search terms or browse other categories.'
                   : 'Be the first to create a club in this category!'}
-              </p>
-              <Button onClick={() => setShowCreateModal(true)}>
-                <Plus className="w-4 h-4" />
-                {user?.role === 'mentor' ? 'Create Club' : 'Suggest Club'}
-              </Button>
-            </div>
-          ) : (
+            </p>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="w-4 h-4" />
+              {user?.role === 'mentor' ? 'Create Club' : 'Suggest Club'}
+            </Button>
+          </div>
+        ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredOtherClubs.map((club) => (
                 <ClubCardWrapper key={club.id} club={club} />
@@ -492,8 +492,8 @@ export const Clubs: React.FC = () => {
               <ClubCardWrapper key={club.id} club={club} />
             ))}
           </div>
-        </div>
-      )}
+          </div>
+        )}
 
       <CreateClubModal />
 

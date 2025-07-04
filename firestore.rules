@@ -9,8 +9,19 @@ service cloud.firestore {
     // Projects can be read by anyone, but only created/updated by the author
     match /projects/{projectId} {
       allow read: if true;
-      allow create, update: if request.auth != null && request.auth.uid == resource.data.authorId;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.authorId ||
+        (request.resource.data.keys().hasOnly(['comments']) && request.resource.data.comments is list)
+      );
       allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+
+      // Allow all authenticated users to read and write comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+      }
     }
     
     // Clubs can be read by anyone, managed by mentors

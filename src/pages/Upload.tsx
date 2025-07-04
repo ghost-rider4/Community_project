@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Upload as UploadIcon, Image, Video, FileText, X, Plus, Tag, Globe, Users, Lock, CheckCircle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, getDocs, where } from 'firebase/firestore';
 import { storage, db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
+
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/di1hexwma/upload';
+const CLOUDINARY_UPLOAD_PRESET = 'Content';
 
 export const Upload: React.FC = () => {
   const [uploadType, setUploadType] = useState<'image' | 'video' | 'document'>('image');
@@ -20,6 +23,9 @@ export const Upload: React.FC = () => {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+  const [uploadErrors, setUploadErrors] = useState<string[]>([]);
+  const [userUploads, setUserUploads] = useState<any[]>([]);
   const { user } = useAuth();
 
   const talents = [
@@ -74,40 +80,23 @@ export const Upload: React.FC = () => {
     setTags(prev => prev.filter(tag => tag !== tagToRemove));
   };
 
-  const uploadFileToStorage = async (file: File): Promise<string> => {
-    if (!user) throw new Error('User not authenticated');
-    
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
-    const filePath = `projects/${user.id}/${fileName}`;
-    
-    const storageRef = ref(storage, filePath);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    
-    return downloadURL;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user) {
       alert('You must be logged in to upload projects');
       return;
     }
-
     if (files.length === 0) {
       alert('Please select at least one file to upload');
       return;
     }
-
     setIsUploading(true);
-    
+    setUploadProgress(Array(files.length).fill(0));
+    setUploadErrors(Array(files.length).fill(''));
     try {
-      // Upload files to Firebase Storage
-      const uploadPromises = files.map(file => uploadFileToStorage(file));
+      // Upload files to Cloudinary
+      const uploadPromises = files.map((file, i) => uploadFileToCloudinary(file, i));
       const fileUrls = await Promise.all(uploadPromises);
-      
       // Create project document in Firestore
       const projectData = {
         title,
@@ -124,21 +113,17 @@ export const Upload: React.FC = () => {
         createdAt: serverTimestamp(),
         verified: false
       };
-
       await addDoc(collection(db, 'projects'), projectData);
-      
-      // Update user's project count
-      // This could be done with a cloud function or here
-      
       setUploadSuccess(true);
-      
-      // Reset form
       setTitle('');
       setDescription('');
       setTalent('');
       setTags([]);
       setFiles([]);
-      
+      // Fetch user's uploads for gallery view
+      const q = query(collection(db, 'projects'), where('authorId', '==', user.id));
+      const snapshot = await getDocs(q);
+      setUserUploads(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
       console.error('Error uploading project:', error);
       alert('Failed to upload project. Please try again.');
@@ -165,10 +150,54 @@ export const Upload: React.FC = () => {
     }
   };
 
+  async function uploadFileToCloudinary(file: File, index: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      if (file.type.startsWith('video/')) {
+        formData.append('resource_type', 'video');
+      }
+      xhr.open('POST', CLOUDINARY_URL);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          setUploadProgress((prev: number[]) => {
+            const copy = [...prev];
+            copy[index] = Math.round((event.loaded / event.total) * 100);
+            return copy;
+          });
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data.secure_url);
+        } else {
+          setUploadErrors((prev: string[]) => {
+            const copy = [...prev];
+            copy[index] = 'Upload failed';
+            return copy;
+          });
+          reject(new Error('Cloudinary upload failed'));
+        }
+      };
+      xhr.onerror = () => {
+        setUploadErrors((prev: string[]) => {
+          const copy = [...prev];
+          copy[index] = 'Upload failed';
+          return copy;
+        });
+        reject(new Error('Cloudinary upload failed'));
+      };
+      xhr.send(formData);
+    });
+  }
+
   if (uploadSuccess) {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-8">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-8 mb-8">
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-green-900 dark:text-green-300 mb-2">
             Project Uploaded Successfully!
@@ -184,6 +213,27 @@ export const Upload: React.FC = () => {
               Go to Dashboard
             </Button>
           </div>
+        </div>
+        <h2 className="text-xl font-semibold mb-4">Your Uploaded Projects</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {userUploads.map((proj) => (
+            <div key={proj.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <div className="aspect-video mb-2 bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                {proj.mediaType === 'video' ? (
+                  <video src={proj.mediaUrls[0]} controls className="w-full h-full object-cover" />
+                ) : (
+                  <img src={proj.mediaUrls[0]} alt={proj.title} className="w-full h-full object-cover" />
+                )}
+              </div>
+              <div className="font-semibold text-gray-900 dark:text-white mb-1">{proj.title}</div>
+              <div className="text-gray-600 dark:text-gray-400 text-sm mb-1 line-clamp-2">{proj.description}</div>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {proj.tags && proj.tags.map((tag: string) => (
+                  <span key={tag} className="px-2 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 text-xs rounded-full">#{tag}</span>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -441,6 +491,20 @@ export const Upload: React.FC = () => {
           </Button>
         </div>
       </form>
+
+      {isUploading && (
+        <div className="mb-4">
+          {files.map((file, i) => (
+            <div key={i} className="flex items-center gap-2 mb-2">
+              <span>{file.name}</span>
+              <div className="w-32 bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${uploadProgress[i] || 0}%` }} />
+              </div>
+              {uploadErrors[i] && <span className="text-red-500 text-xs ml-2">{uploadErrors[i]}</span>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

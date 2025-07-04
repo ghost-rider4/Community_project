@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
 import { ProjectCard } from '../components/feed/ProjectCard';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { Project } from '../types';
 
 export const Explore: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [projects, setProjects] = useState<Project[]>([]);
   const navigate = useNavigate();
   
   const filters = [
@@ -17,9 +21,32 @@ export const Explore: React.FC = () => {
     { id: 'technology', label: 'Technology' }
   ];
 
-  // Empty state for projects
-  const projects: any[] = [];
-  
+  useEffect(() => {
+    const q = query(collection(db, 'projects'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetched: Project[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          description: data.description,
+          authorId: data.authorId,
+          authorName: data.authorName,
+          talent: data.talent,
+          mediaUrl: Array.isArray(data.mediaUrls) ? data.mediaUrls[0] : data.mediaUrl,
+          mediaType: data.mediaType,
+          likes: data.likes || 0,
+          comments: data.comments || [],
+          tags: data.tags || [],
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+          verified: data.verified || false,
+        };
+      });
+      setProjects(fetched);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ paddingLeft: 80 }}>
       <div className="mb-8">

@@ -1,18 +1,18 @@
 import React from 'react';
 
-interface CardProps {
+export interface CardProps {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
 }
 
-export const Card: React.FC<CardProps> = ({ children, className = '', hover = false }) => {
+export const Card: React.FC<CardProps> = ({ children, className = '', hover = false, onClick }) => {
   return (
-    <div className={`
-      bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700
-      ${hover ? 'hover:shadow-lg hover:scale-[1.02] transition-all duration-200' : ''}
-      ${className}
-    `}>
+    <div
+      className={`rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 ${hover ? 'hover:shadow-lg transition-shadow duration-200' : ''} ${className}`}
+      onClick={onClick}
+    >
       {children}
     </div>
   );

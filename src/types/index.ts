@@ -62,6 +62,7 @@ export interface Project {
   tags: string[];
   createdAt: Date;
   verified: boolean;
+  likedBy?: string[];
 }
 
 export interface Comment {
