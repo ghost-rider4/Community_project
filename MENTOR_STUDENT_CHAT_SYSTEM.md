@@ -72,13 +72,14 @@ This system enables students to browse mentor profiles and send chat requests to
 ### Backend Services
 
 #### 1. `mentorshipService.ts`
-- `fetchMentors()`: Retrieves all available mentors
+- `fetchMentors()`: Retrieves all available mentors (auto-creates samples if none exist)
 - `sendChatRequest()`: Creates a new chat request
 - `getMentorChatRequests()`: Real-time listener for mentor's incoming requests
 - `acceptChatRequest()`: Accepts request and creates private chat channel
 - `declineChatRequest()`: Declines a chat request
 - `getStudentMentorships()`: Gets student's active mentorship connections
 - `getMentorMentorships()`: Gets mentor's active mentorship connections
+- `createSampleMentors()`: Creates sample mentors for testing/development
 
 ### Database Schema
 
