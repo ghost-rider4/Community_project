@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { ChatRequestManagement } from '../components/mentors/ChatRequestManagement';
 import { MentorshipChats } from '../components/mentors/MentorshipChats';
+import { MentorProfiles } from '../components/dashboard/MentorProfiles';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -74,6 +75,8 @@ export const Dashboard: React.FC = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           <FeedSection />
+          {/* Show mentor profiles for students */}
+          {user?.role === 'student' && <MentorProfiles />}
         </div>
         
         {/* Sidebar */}

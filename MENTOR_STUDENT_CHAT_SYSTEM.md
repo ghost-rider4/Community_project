@@ -8,9 +8,11 @@ This system enables students to browse mentor profiles and send chat requests to
 
 ### 1. Mentor Profile Browsing
 - Students can view all available mentors on the `/mentors` page
+- **Dashboard Integration**: Mentor profiles are now always visible on the student dashboard
 - Mentors are displayed with their profiles, expertise, ratings, and availability
-- Students can search mentors by name or expertise
+- Students can search mentors by name or expertise (both on dashboard and mentors page)
 - Filter mentors by expertise areas
+- Quick access from dashboard with "View All" button to navigate to full mentors page
 
 ### 2. Chat Request System
 - **Student Side**: Students can send chat requests to mentors with a personalized message
@@ -59,6 +61,13 @@ This system enables students to browse mentor profiles and send chat requests to
 - Includes search and filter functionality
 - Shows mentor management interface for mentor users
 - Integrated chat request system
+
+#### 6. `MentorProfiles.tsx` Dashboard Component
+- Displays mentor profiles directly on the student dashboard
+- Shows up to 6 mentors in a compact grid format
+- Includes search functionality for quick filtering
+- Provides easy navigation to full mentors page
+- Only visible to students, not mentors
 
 ### Backend Services
 
@@ -112,13 +121,13 @@ Added comprehensive security rules for:
 ## User Flow
 
 ### For Students:
-1. Navigate to `/mentors` page
-2. Browse available mentors using search/filter
-3. Click "Request Chat" on desired mentor
-4. Fill out introduction message in modal
-5. Submit request
-6. Monitor dashboard for accepted requests
-7. Access private chats through dashboard
+1. **Dashboard Access**: View mentor profiles directly on dashboard or navigate to `/mentors` page
+2. **Search & Browse**: Use search functionality to find mentors by name or expertise
+3. **Request Chat**: Click "Request Chat" on desired mentor from dashboard or mentors page
+4. **Introduction**: Fill out personalized introduction message in modal
+5. **Submit**: Send request and receive confirmation
+6. **Monitor**: Check dashboard for request status and accepted requests
+7. **Chat**: Access private chats through dashboard when mentors accept requests
 
 ### For Mentors:
 1. Receive real-time chat request notifications on dashboard
@@ -130,9 +139,11 @@ Added comprehensive security rules for:
 ## Integration Points
 
 ### Dashboard Integration
-- Mentors see "Chat Request Management" section
-- Both users see "Mentorship Chats" section
+- **Students**: See "Available Mentors" section with searchable mentor profiles
+- **Mentors**: See "Chat Request Management" section for incoming requests
+- **Both users**: See "Mentorship Chats" section for active conversations
 - Real-time updates without page refresh
+- Quick navigation between dashboard and full pages
 
 ### Stream Chat Integration
 - Private channels created with unique IDs
