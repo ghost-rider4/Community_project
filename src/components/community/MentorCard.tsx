@@ -7,6 +7,7 @@ import { Badge } from '../ui/Badge';
 import { Mentor } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChatModal } from '../chat/ChatModal';
+import { ChatRequestModal } from '../mentors/ChatRequestModal';
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -14,7 +15,7 @@ interface MentorCardProps {
 
 export const MentorCard: React.FC<MentorCardProps> = ({ mentor }) => {
   const { user } = useAuth();
-  const [chatOpen, setChatOpen] = React.useState(false);
+  const [chatRequestOpen, setChatRequestOpen] = React.useState(false);
 
   return (
     <Card hover>
@@ -38,10 +39,12 @@ export const MentorCard: React.FC<MentorCardProps> = ({ mentor }) => {
                 <Users className="w-4 h-4" />
                 <span>{mentor.studentsCount} students</span>
               </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span className="truncate">{mentor.location}</span>
-              </div>
+              {mentor.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span className="truncate">{mentor.location}</span>
+                </div>
+              )}
             </div>
             
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{mentor.experience}</p>
@@ -55,20 +58,23 @@ export const MentorCard: React.FC<MentorCardProps> = ({ mentor }) => {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="primary" size="sm" className="flex-1 text-sm">
-            Request Mentorship
-          </Button>
           <Button variant="outline" size="sm" className="text-sm">
             View Profile
           </Button>
-          <Button variant="secondary" size="sm" className="text-sm" onClick={() => setChatOpen(true)}>
-            Chat
-          </Button>
-          <ChatModal
-            open={chatOpen}
-            onClose={() => setChatOpen(false)}
-            channelType="messaging"
-            members={[user?.id, mentor.id]}
+          {user?.role === 'student' && (
+            <Button 
+              variant="primary" 
+              size="sm" 
+              className="text-sm" 
+              onClick={() => setChatRequestOpen(true)}
+            >
+              Request Chat
+            </Button>
+          )}
+          <ChatRequestModal
+            open={chatRequestOpen}
+            onClose={() => setChatRequestOpen(false)}
+            mentor={mentor}
           />
         </div>
       </CardContent>

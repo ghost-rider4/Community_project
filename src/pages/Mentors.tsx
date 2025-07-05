@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Star, MapPin, Bot, Sparkles, MessageCircle, Users } from 'lucide-react';
 import { AIChatModal } from '../components/ai/AIChatModal';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { useAuth } from '../contexts/AuthContext';
+import { MentorCard } from '../components/community/MentorCard';
+import { ChatRequestManagement } from '../components/mentors/ChatRequestManagement';
+import { fetchMentors } from '../services/mentorshipService';
+import { Mentor } from '../types';
 
 export const Mentors: React.FC = () => {
   const [selectedExpertise, setSelectedExpertise] = useState('all');
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [isLoadingMentors, setIsLoadingMentors] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const expertiseAreas = [
     { id: 'all', label: 'All Mentors' },
@@ -35,9 +42,34 @@ export const Mentors: React.FC = () => {
   };
   
   const { user } = useAuth();
-  
-  // Debug: Show user role
-  console.log('User:', user);
+
+  // Fetch mentors on component mount
+  useEffect(() => {
+    const loadMentors = async () => {
+      try {
+        const mentorsData = await fetchMentors();
+        setMentors(mentorsData);
+      } catch (error) {
+        console.error('Error loading mentors:', error);
+      } finally {
+        setIsLoadingMentors(false);
+      }
+    };
+
+    loadMentors();
+  }, []);
+
+  // Filter mentors based on search term and expertise
+  const filteredMentors = mentors.filter((mentor: Mentor) => {
+    const matchesSearch = searchTerm === '' || 
+      mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      mentor.expertise.some((skill: string) => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesExpertise = selectedExpertise === 'all' || 
+      mentor.expertise.some((skill: string) => skill.toLowerCase().includes(selectedExpertise.toLowerCase()));
+    
+    return matchesSearch && matchesExpertise;
+  });
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8" style={{ paddingLeft: 80 }}>
@@ -48,8 +80,12 @@ export const Mentors: React.FC = () => {
         </p>
       </div>
 
-      {/* Debug: Show user role in UI */}
-      <div className="mb-2 text-xs text-gray-500">Current user role: {user ? user.role : 'none'}</div>
+      {/* Show chat request management for mentors */}
+      {user?.role === 'mentor' && (
+        <div className="mb-8">
+          <ChatRequestManagement />
+        </div>
+      )}
 
       {/* AI Mentor Spotlight (students only) */}
       {user && user.role === 'student' && (
@@ -133,6 +169,8 @@ export const Mentors: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search mentors..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base"
               />
             </div>
@@ -171,19 +209,44 @@ export const Mentors: React.FC = () => {
       
       {/* Human Mentors */}
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">Human Mentors</h2>
-        <div className="text-center py-16">
-          <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No mentors available yet
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            We're working on connecting you with amazing mentors. In the meantime, try our AI mentor!
-          </p>
-          <Button onClick={() => setIsAIChatOpen(true)}>
-            Chat with Sophia AI
-          </Button>
-        </div>
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
+          Human Mentors
+          {filteredMentors.length > 0 && (
+            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+              ({filteredMentors.length} found)
+            </span>
+          )}
+        </h2>
+        
+        {isLoadingMentors ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+          </div>
+        ) : filteredMentors.length === 0 ? (
+          <div className="text-center py-16">
+            <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              {mentors.length === 0 ? 'No mentors available yet' : 'No mentors match your search'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {mentors.length === 0 
+                ? "We're working on connecting you with amazing mentors. In the meantime, try our AI mentor!"
+                : "Try adjusting your search terms or expertise filters."
+              }
+            </p>
+            {mentors.length === 0 && (
+              <Button onClick={() => setIsAIChatOpen(true)}>
+                Chat with Sophia AI
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMentors.map((mentor) => (
+              <MentorCard key={mentor.id} mentor={mentor} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* AI Chat Modal */}

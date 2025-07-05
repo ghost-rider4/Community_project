@@ -54,7 +54,25 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
     }
     
-    // Mentorship relationships
+    // Chat requests - students can create, mentors can read/update their requests
+    match /chatRequests/{requestId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.studentId || request.auth.uid == resource.data.mentorId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.studentId;
+      allow update: if request.auth != null && request.auth.uid == resource.data.mentorId;
+      allow delete: if false; // Don't allow deletion, only status updates
+    }
+    
+    // Mentorship connections - both mentor and student can read
+    match /mentorshipConnections/{connectionId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.mentorId || request.auth.uid == resource.data.studentId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.mentorId;
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.mentorId || request.auth.uid == resource.data.studentId);
+    }
+    
+    // Mentorship relationships (legacy - keeping for backward compatibility)
     match /mentorships/{mentorshipId} {
       allow read, write: if request.auth != null && 
         (request.auth.uid == resource.data.mentorId || request.auth.uid == resource.data.studentId);

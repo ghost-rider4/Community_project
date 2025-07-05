@@ -4,6 +4,8 @@ import { DailyChallenges } from '../components/dashboard/DailyChallenges';
 import { FeedSection } from '../components/feed/FeedSection';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
+import { ChatRequestManagement } from '../components/mentors/ChatRequestManagement';
+import { MentorshipChats } from '../components/mentors/MentorshipChats';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -78,6 +80,12 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-6">
           <SkillProgress />
           <DailyChallenges />
+          
+          {/* Mentor Chat Management */}
+          {user?.role === 'mentor' && <ChatRequestManagement />}
+          
+          {/* Active Mentorship Chats */}
+          <MentorshipChats />
         </div>
       </div>
     </div>

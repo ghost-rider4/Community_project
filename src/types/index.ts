@@ -155,3 +155,26 @@ export interface LevelReward {
   description: string;
   rewards: string[];
 }
+
+export interface ChatRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentAvatar?: string;
+  mentorId: string;
+  mentorName: string;
+  status: 'pending' | 'accepted' | 'declined';
+  message: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MentorshipConnection {
+  id: string;
+  studentId: string;
+  mentorId: string;
+  status: 'active' | 'inactive' | 'ended';
+  chatChannelId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
